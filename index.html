@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>London 3-Bed Flat Search — JClaw</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-card: #1c2128;
+  --bg-hover: #252c35;
+  --border: #30363d;
+  --border-light: #3d444d;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --accent: #58a6ff;
+  --orange: #f0883e;
+  --purple: #bc8cff;
+  --green: #3fb950;
+  --red: #f85149;
+  --yellow: #d29922;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* HEADER */
+.header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 1000;
+  position: relative;
+}
+.header .logo {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.header .logo span { color: var(--accent); }
+.header .logo .fox { font-size: 22px; }
+
+/* FILTER DROPDOWN */
+.filter-dropdown-wrapper {
+  position: relative;
+  flex: 0 0 auto;
+}
+.filter-toggle {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.filter-toggle:hover { border-color: var(--accent); background: var(--bg-hover); }
+.filter-toggle .active-count {
+  background: var(--accent);
+  color: #fff;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.filter-toggle .arrow { font-size: 10px; transition: transform 0.2s; }
+.filter-toggle.open .arrow { transform: rotate(180deg); }
+.filter-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 0;
+  min-width: 240px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  z-index: 2000;
+}
+.filter-dropdown.open { display: block; }
+.filter-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 13px;
+  color: var(--text-secondary);
+  gap: 12px;
+}
+.filter-item:hover { background: var(--bg-hover); }
+.filter-item.active { color: var(--text-primary); }
+.filter-item .check {
+  width: 18px; height: 18px; border-radius: 4px;
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; flex-shrink: 0; transition: all 0.15s;
+}
+.filter-item.active .check {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+}
+.filter-item .label { flex: 1; }
+.filter-item .count {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+.filter-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+/* SORT & COUNT BAR */
+.sub-bar {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.result-count {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.result-count strong { color: var(--text-primary); }
+.sort-select {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.sort-select:focus { outline: 1px solid var(--accent); }
+
+/* LEGEND */
+.legend {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.legend-dot.orange { background: var(--orange); }
+.legend-dot.purple { background: var(--purple); }
+.legend-dot.green { background: var(--green); }
+.legend-dot.red { background: var(--red); }
+
+/* MAIN LAYOUT */
+.main {
+  display: flex;
+  height: calc(100vh - 95px);
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 40%;
+  min-width: 340px;
+  overflow-y: auto;
+  background: var(--bg-primary);
+  border-right: 1px solid var(--border);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* PROPERTY CARD */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin: 10px 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+  border-left: 4px solid var(--green);
+}
+.card:hover {
+  border-color: var(--border-light);
+  background: var(--bg-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.card.active {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 1px var(--accent), 0 4px 16px rgba(88,166,255,0.15);
+}
+.card.cat-sauna { border-left-color: var(--orange); }
+.card.cat-monitor { border-left-color: var(--red); }
+.card.has-terrace:not(.cat-sauna):not(.cat-monitor) { border-left-color: var(--purple); }
+
+.card-image {
+  height: 140px;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s;
+}
+.card:hover .card-image img { transform: scale(1.05); }
+.card-image .img-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 50%);
+  pointer-events: none;
+}
+.card-gradient {
+  width: 100%;
+  height: 100%;
+}
+.card.cat-sauna .card-gradient {
+  background: linear-gradient(135deg, #2d1a00 0%, #5c3a0a 40%, #f0883e22 100%);
+}
+.card.cat-monitor .card-gradient {
+  background: linear-gradient(135deg, #2d0a0a 0%, #5c1a1a 40%, #f8514922 100%);
+}
+.card.has-terrace:not(.cat-sauna):not(.cat-monitor) .card-gradient {
+  background: linear-gradient(135deg, #1a0a2d 0%, #3a1a5c 40%, #bc8cff22 100%);
+}
+.card-gradient {
+  background: linear-gradient(135deg, #0a1a2d 0%, #1a3a5c 40%, #3fb95022 100%);
+}
+.card-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.7);
+  color: var(--text-primary);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+}
+.card-badge.monitoring { background: rgba(248,81,73,0.3); color: var(--red); }
+.card-badge.available { background: rgba(63,185,80,0.2); color: var(--green); }
+
+.card-body { padding: 12px 14px; }
+.card-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+.card-price.monitor-price {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.card-address {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+.card-specs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.card-specs span { display: flex; align-items: center; gap: 3px; }
+.card-notes {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  font-style: italic;
+  line-height: 1.4;
+}
+.card-amenities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.amenity-tag {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.amenity-tag.highlight {
+  border-color: var(--orange);
+  color: var(--orange);
+  background: rgba(240,136,62,0.08);
+}
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.card-agent {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.card-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+.card-btn:hover { background: #79b8ff; transform: scale(1.02); }
+.card-btn.coming-soon {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: default;
+}
+.card-btn.coming-soon:hover { transform: none; background: var(--bg-primary); }
+
+/* MAP */
+.map-container {
+  flex: 1;
+  position: relative;
+}
+#map { width: 100%; height: 100%; }
+
+/* Leaflet popup overrides */
+.leaflet-popup-content-wrapper {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border-radius: 10px !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
+}
+.leaflet-popup-tip { background: var(--bg-card) !important; }
+.leaflet-popup-content { margin: 12px 14px !important; font-family: 'Inter', sans-serif !important; }
+.leaflet-popup-close-button { color: var(--text-muted) !important; font-size: 18px !important; }
+.popup-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.popup-price { font-size: 16px; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+.popup-details { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+.popup-notes { font-size: 11px; color: var(--text-muted); font-style: italic; margin-bottom: 8px; }
+.popup-btn {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  padding: 5px 12px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.popup-btn:hover { background: #79b8ff; }
+
+/* Custom marker styles */
+.custom-marker {
+  background: none !important;
+  border: none !important;
+}
+.marker-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.3);
+}
+.marker-dot.orange { background: var(--orange); box-shadow: 0 0 10px rgba(240,136,62,0.5); }
+.marker-dot.purple { background: var(--purple); box-shadow: 0 0 10px rgba(188,140,255,0.5); }
+.marker-dot.green { background: var(--green); box-shadow: 0 0 8px rgba(63,185,80,0.4); }
+.marker-dot.red { background: var(--red); box-shadow: 0 0 8px rgba(248,81,73,0.4); }
+.marker-dot.orange-purple {
+  background: var(--orange);
+  box-shadow: 0 0 10px rgba(240,136,62,0.5);
+  border: 3px solid var(--purple);
+}
+.marker-dot.sauna-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(240,136,62,0.5); transform: scale(1); }
+  50% { box-shadow: 0 0 20px rgba(240,136,62,0.8), 0 0 40px rgba(240,136,62,0.3); transform: scale(1.15); }
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .main { flex-direction: column-reverse; }
+  .sidebar { width: 100%; min-width: 0; height: 50vh; border-right: none; border-top: 1px solid var(--border); }
+  .map-container { height: 50vh; }
+  .header { flex-wrap: wrap; padding: 10px 12px; gap: 10px; }
+  .legend { display: none; }
+  .sub-bar { padding: 6px 12px; flex-wrap: wrap; }
+  .filter-dropdown { left: auto; right: 0; }
+}
+
+/* No results */
+.no-results {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+.no-results h3 { font-size: 16px; margin-bottom: 8px; color: var(--text-secondary); }
+.no-results p { font-size: 13px; }
+
+/* Leaflet attribution */
+.leaflet-control-attribution { background: rgba(13,17,23,0.8) !important; color: var(--text-muted) !important; font-size: 10px !important; }
+.leaflet-control-attribution a { color: var(--accent) !important; }
+.leaflet-control-zoom a {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+.leaflet-control-zoom a:hover { background: var(--bg-hover) !important; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo"><span class="fox">🦊</span> <span>JClaw</span> London Flats</div>
+  <div class="filter-dropdown-wrapper" id="filterWrapper">
+    <button class="filter-toggle" id="filterToggle" onclick="toggleDropdown()">
+      🔍 Filters <span class="active-count" id="filterActiveCount">All</span>
+      <span class="arrow">▼</span>
+    </button>
+    <div class="filter-dropdown" id="filterDropdown"></div>
+  </div>
+</div>
+
+<div class="sub-bar">
+  <div class="result-count" id="resultCount">Showing <strong>0</strong> of <strong>0</strong> properties</div>
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot orange"></span> Sauna/Steam</div>
+    <div class="legend-item"><span class="legend-dot purple"></span> Terrace/Balcony</div>
+    <div class="legend-item"><span class="legend-dot green"></span> Active</div>
+    <div class="legend-item"><span class="legend-dot red"></span> Monitored</div>
+  </div>
+  <select class="sort-select" id="sortSelect">
+    <option value="price-asc">Price: Low → High</option>
+    <option value="price-desc">Price: High → Low</option>
+    <option value="name">Name A–Z</option>
+  </select>
+</div>
+
+<div class="main">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="map-container">
+    <div id="map"></div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────
+const properties = [
+  // SAUNA/STEAM BUILDINGS WITH ACTIVE LISTINGS
+  {id:1,name:"Westmark Tower, West End Gate, W2",lat:51.5195,lng:-0.1712,price:"£6,000–£8,667",priceNum:6000,beds:3,baths:2,sqft:"1,145",amenities:["sauna","steam","pool","gym","cinema","concierge","furnished","parking"],agent:"Napier Watt / Various",url:"https://www.napierwatt.co.uk/properties/westmark-tower-west-end-gate-w2/",notes:"Multiple units. 16th floor panoramic views. Parking on some.",available:"Now",cat:"sauna",photo:"https://www.napierwatt.co.uk/wp-content/uploads/2026/01/G970iuekCUObrleqje2nvA-1024x682.jpg"},
+  {id:2,name:"Garrett Mansions, West End Gate, W2",lat:51.5190,lng:-0.1720,price:"£6,998–£8,624",priceNum:6998,beds:3,baths:2,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"OpenRent / Interlet / EGRE",url:"https://www.onthemarket.com/details/12876905/",notes:"Same West End Gate development.",available:"Now",cat:"sauna",photo:"https://media.onthemarket.com/properties/12876905/1592575426/image-0-1024x1024.jpg"},
+  {id:3,name:"375 Kensington High Street, W14",lat:51.4955,lng:-0.2070,price:"£4,983–£7,500",priceNum:4983,beds:3,baths:2,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Benham & Reeves / Saba",url:"https://www.zoopla.co.uk/to-rent/flats/3-bedrooms/london/kensington-high-street-w14/",notes:"105 x 3-bed units. Best value + availability.",available:"Now",cat:"sauna",photo:"https://www.gartonjones.com/wp-content/uploads/Exterior-1.jpg"},
+  {id:4,name:"Lillie Square, Earls Court, SW6",lat:51.4870,lng:-0.1945,price:"£5,850–£6,933",priceNum:5850,beds:3,baths:2,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Benham & Reeves / Foxtons / Savills",url:"https://www.rightmove.co.uk/properties/173025335",notes:"Capco development. Several 3-beds listed.",available:"Now",cat:"sauna",photo:"https://media.rightmove.co.uk/property-photo/582a0b848/173025335/582a0b8489c99b2ea0fa93e7d2fa9606.jpeg"},
+  {id:5,name:"Prince of Wales Terrace, W8 (Serviced)",lat:51.5020,lng:-0.1850,price:"£10,653",priceNum:10653,beds:3,baths:2,sqft:"",amenities:["sauna","steam","gym","furnished","concierge"],agent:"Residential Land",url:"https://www.zoopla.co.uk/to-rent/details/71997921/",notes:"Fully serviced. Bills included. Overlooks Hyde Park.",available:"Now",cat:"sauna",photo:"https://cdn.londonservicedapartments.co.uk/2017/06/living_room-POWT.jpg"},
+  {id:6,name:"Principal Tower, Shoreditch EC2A",lat:51.5235,lng:-0.0780,price:"£6,000–£9,000",priceNum:6000,beds:3,baths:2,sqft:"",amenities:["sauna","steam","pool","gym","concierge"],agent:"Benham & Reeves / CBRE",url:"https://www.benhams.com/property-to-rent/city-ec2a/1307/",notes:"Foster + Partners. City fringe.",available:"Now",cat:"sauna",photo:"https://www.benhams.com/assets/property-images/thumb/BR18740_000015342_IMG_00.jpg"},
+  // ACTIVE LISTINGS
+  {id:7,name:"Seymour Place, Marylebone W1H",lat:51.5155,lng:-0.1610,price:"£4,312",priceNum:4312,beds:3,baths:2,sqft:"1,076",amenities:["furnished"],agent:"Carter Jonas",url:"https://www.onthemarket.com/details/4116290/",notes:"Portman Estate. Near Marble Arch.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/4116290/1602150572/image-0-1024x1024.jpg"},
+  {id:8,name:"Fisherton Street (Carrick Yard), NW8",lat:51.5268,lng:-0.1740,price:"£4,767",priceNum:4767,beds:3,baths:2,sqft:"1,021",amenities:["balcony","concierge","parking","furnished"],agent:"Savills",url:"https://www.onthemarket.com/details/16931613/",notes:"A/C + underfloor heating.",available:"1 May 2026",cat:"active",photo:"https://media.onthemarket.com/properties/16931613/1542135653/image-0-1024x1024.jpg"},
+  {id:9,name:"Shirland Road, Maida Vale W9",lat:51.5280,lng:-0.1875,price:"£4,950",priceNum:4950,beds:3,baths:2,sqft:"1,150",amenities:["terrace","parking","garden"],agent:"Savills",url:"https://www.onthemarket.com/details/18571616/",notes:"Part-furnished maisonette. Gated parking.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/18571616/1595346296/image-0-1024x1024.jpg"},
+  {id:10,name:"Bryanston Court, George Street W1H",lat:51.5165,lng:-0.1590,price:"£4,983",priceNum:4983,beds:3,baths:2,sqft:"",amenities:["concierge"],agent:"Napier Watt",url:"https://www.onthemarket.com/details/16436380/",notes:"Classic lateral. 24hr porter.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/16436380/1528946426/image-0-1024x1024.jpg"},
+  {id:11,name:"Sussex Gardens, Hyde Park W2",lat:51.5150,lng:-0.1730,price:"£4,996",priceNum:4996,beds:3,baths:1,sqft:"",amenities:[],agent:"Benham & Reeves",url:"https://www.rightmove.co.uk/properties/87731823",notes:"Recently redecorated. Near Lancaster Gate.",available:"Now",cat:"active",photo:"https://media.rightmove.co.uk/property-photo/61419534a/87731823/61419534abd3a153b3b54dba4daa97d0.jpeg"},
+  {id:12,name:"George Street, Marylebone W1H",lat:51.5170,lng:-0.1600,price:"£5,400",priceNum:5400,beds:3,baths:2,sqft:"1,216",amenities:["concierge"],agent:"Dutch & Dutch",url:"https://www.onthemarket.com/details/18955748/",notes:"Bright 4th floor. Near Marble Arch.",available:"6 Apr 2026",cat:"active",photo:"https://media.onthemarket.com/properties/18955748/1603141942/image-0-1024x1024.jpg"},
+  {id:13,name:"Ellerton House, Bryanston Square W1H",lat:51.5170,lng:-0.1620,price:"£5,416",priceNum:5416,beds:3,baths:1,sqft:"1,145",amenities:["concierge","garden"],agent:"Napier Watt",url:"https://www.onthemarket.com/details/10118165/",notes:"Private garden square access.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/10118165/1341292875/image-0-1024x1024.jpg"},
+  {id:14,name:"Lincoln Court, 42 Maida Vale W9",lat:51.5260,lng:-0.1855,price:"£5,500",priceNum:5500,beds:3,baths:3,sqft:"1,971",amenities:["balcony","parking","garden"],agent:"Knight Frank",url:"https://www.onthemarket.com/details/18265371/",notes:"ENORMOUS for the price. Pets considered.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/18265371/1580328159/image-0-1024x1024.jpg"},
+  {id:15,name:"Boydell Court, St Johns Wood NW8",lat:51.5310,lng:-0.1680,price:"£5,633",priceNum:5633,beds:3,baths:1,sqft:"1,198",amenities:["concierge","parking","garden"],agent:"Savills",url:"https://www.rightmove.co.uk/properties/173619302",notes:"Gated complex. A/C. 24hr porters.",available:"Now",cat:"active",photo:"https://media.rightmove.co.uk/property-photo/c4031c710/173619302/c4031c7104257e6bf34473c490a2f196.jpeg"},
+  {id:16,name:"Courtfield Road, South Kensington SW7",lat:51.4930,lng:-0.1870,price:"£5,850",priceNum:5850,beds:3,baths:2,sqft:"",amenities:["garden"],agent:"Susan Metcalfe",url:"https://www.rightmove.co.uk/properties/165547292",notes:"REDUCED. Split-level. High ceilings.",available:"Now",cat:"active",photo:"https://media.rightmove.co.uk/property-photo/3c9fbae31/165547292/3c9fbae31e83d544e0d8515e19918e91.jpeg"},
+  {id:17,name:"Queens Building, Queensway W2",lat:51.5135,lng:-0.1870,price:"£5,980–£7,495",priceNum:5980,beds:3,baths:2,sqft:"1,273",amenities:["balcony","terrace","concierge","furnished"],agent:"Scraye / eXp",url:"https://www.onthemarket.com/details/19065013/",notes:"Art Deco cinema conversion. A/C.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/19065013/1602331347/image-0-1024x1024.jpg"},
+  {id:18,name:"Allsop Place, Marylebone NW1",lat:51.5228,lng:-0.1570,price:"£5,997",priceNum:5997,beds:3,baths:3,sqft:"",amenities:["concierge","furnished","garden"],agent:"Dexters",url:"https://www.onthemarket.com/details/19046602/",notes:"Two private courtyards.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/19046602/1601854543/image-0-1024x1024.jpg"},
+  {id:19,name:"Warwick Gardens, Kensington W14",lat:51.4975,lng:-0.2010,price:"£6,240",priceNum:6240,beds:3,baths:2,sqft:"1,253",amenities:["garden"],agent:"John D Wood",url:"https://www.onthemarket.com/details/18742235/",notes:"REDUCED. Period features. Private garden.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/18742235/1597199906/image-0-1024x1024.jpg"},
+  {id:20,name:"Hill Road, NW8 (near Abbey Road)",lat:51.5310,lng:-0.1790,price:"£6,240",priceNum:6240,beds:3,baths:2,sqft:"1,355",amenities:["furnished"],agent:"Domus Nova",url:"https://www.onthemarket.com/details/18663220/",notes:"Design-led duplex. Short-term available.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/18663220/1592885171/image-0-1024x1024.jpg"},
+  {id:21,name:"Berkeley Court, Glentworth Street NW1",lat:51.5230,lng:-0.1575,price:"£6,283",priceNum:6283,beds:3,baths:3,sqft:"",amenities:["concierge","terrace"],agent:"Hugh F Shaw",url:"https://www.onthemarket.com/details/17608733/",notes:"24hr porterage. Exclusive roof garden.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/17608733/1598173838/image-0-1024x1024.jpg"},
+  {id:22,name:"Dorset House, Gloucester Place NW1",lat:51.5210,lng:-0.1560,price:"£6,306",priceNum:6306,beds:3,baths:2,sqft:"1,034",amenities:["concierge","balcony"],agent:"Sandfords",url:"https://www.onthemarket.com/details/18544332/",notes:"REDUCED. Art Deco. 24hr security.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/18544332/1600524395/image-0-1024x1024.jpg"},
+  {id:23,name:"Great Cumberland Place, W1H",lat:51.5145,lng:-0.1598,price:"£6,500",priceNum:6500,beds:3,baths:2,sqft:"968",amenities:["concierge","furnished","parking"],agent:"Knight Frank",url:"https://www.onthemarket.com/details/19059093/",notes:"Available 25 May 2026. Comfort cooling.",available:"25 May 2026",cat:"active",photo:"https://media.onthemarket.com/properties/19059093/1602145505/image-0-1024x1024.jpg"},
+  {id:24,name:"Bryanston Square, Marylebone W1H",lat:51.5175,lng:-0.1630,price:"£6,500",priceNum:6500,beds:3,baths:3,sqft:"1,517",amenities:["garden"],agent:"Napier Watt",url:"https://www.onthemarket.com/details/18677392/",notes:"Newly refurbished. Private gated gardens.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/18677392/1593558180/image-0-1024x1024.jpg"},
+  {id:25,name:"Hyde Park Mansions, Marylebone NW1",lat:51.5195,lng:-0.1640,price:"£6,600",priceNum:6600,beds:3,baths:2,sqft:"1,639",amenities:["furnished"],agent:"Chestertons",url:"https://www.onthemarket.com/details/19026047/",notes:"Red-brick mansion block. Period features.",available:"3 Apr 2026",cat:"active",photo:"https://media.onthemarket.com/properties/19026047/1601333029/image-0-1024x1024.jpg"},
+  {id:26,name:"Rodney Court, Maida Vale W9",lat:51.5255,lng:-0.1840,price:"£6,600",priceNum:6600,beds:3,baths:2,sqft:"",amenities:["concierge"],agent:"Goldschmidt & Howland",url:"https://www.onthemarket.com/details/18613693/",notes:"Newly renovated. 24hr porterage.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/18613693/1591389612/image-0-1024x1024.jpg"},
+  {id:27,name:"Northwick House, St Johns Wood NW8",lat:51.5245,lng:-0.1720,price:"£6,600",priceNum:6600,beds:3,baths:2,sqft:"1,696",amenities:["concierge","terrace"],agent:"Knight Frank",url:"https://www.onthemarket.com/details/17938942/",notes:"4th floor mansion block. Communal roof terrace.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/17938942/1578243521/image-0-1024x1024.jpg"},
+  {id:28,name:"Barrie House, Lancaster Gate W2",lat:51.5120,lng:-0.1790,price:"£6,760",priceNum:6760,beds:3,baths:3,sqft:"1,087",amenities:["concierge","furnished"],agent:"Napier Watt",url:"https://www.onthemarket.com/details/18406602/",notes:"Interior designed. Overlooks Hyde Park.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/18406602/1585253008/image-0-1024x1024.jpg"},
+  {id:29,name:"Hereford Road, Notting Hill W2",lat:51.5145,lng:-0.1920,price:"POA",priceNum:99999,beds:3,baths:2,sqft:"",amenities:["balcony","concierge","parking"],agent:"Hamptons",url:"https://www.onthemarket.com/details/19063186/",notes:"Near Westbourne Grove & Hyde Park.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/19063186/1602295839/image-0-1024x1024.png"},
+  {id:30,name:"Weymouth Street, Marylebone",lat:51.5215,lng:-0.1480,price:"POA",priceNum:99999,beds:3,baths:2,sqft:"1,193",amenities:["balcony","parking"],agent:"Sandfords",url:"https://www.onthemarket.com/details/7447909/",notes:"New development. Available 1 May 2026.",available:"1 May 2026",cat:"active",photo:"https://media.onthemarket.com/properties/7447909/1599992119/image-0-1024x1024.jpg"},
+  {id:31,name:"Iverna Court, Kensington W8",lat:51.4970,lng:-0.1920,price:"POA",priceNum:99999,beds:3,baths:2,sqft:"1,475",amenities:["concierge"],agent:"Chestertons",url:"https://www.onthemarket.com/details/18573544/",notes:"Refurbished mansion block. Near Kensington Gardens.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/18573544/1601612845/image-0-1024x1024.jpg"},
+  {id:32,name:"Elizabeth Court, Palgrave Gardens NW1",lat:51.5240,lng:-0.1620,price:"TBC",priceNum:99998,beds:3,baths:2,sqft:"",amenities:["pool","gym","concierge","parking","garden"],agent:"Aston Chase",url:"https://www.rightmove.co.uk/properties/173587343",notes:"Fully refurbished. Private decked garden.",available:"Now",cat:"active",photo:"https://media.rightmove.co.uk/property-photo/bdbe784ee/173587343/bdbe784eedf3b97c302cc4af4ff0d5b1.jpeg"},
+  {id:33,name:"219 Baker Street, NW1",lat:51.5228,lng:-0.1565,price:"£9,000–£9,250",priceNum:9000,beds:3,baths:2,sqft:"",amenities:["gym","concierge","parking"],agent:"ila",url:"https://www.rightmove.co.uk/properties/87740349",notes:"Pet friendly. Built for renters.",available:"Now",cat:"active",photo:"https://media.rightmove.co.uk/property-photo/5726c12ca/87740349/5726c12ca957ef64c1328e0390a7d786.jpeg"},
+  {id:34,name:"Regent Court, NW8",lat:51.5295,lng:-0.1700,price:"£3,683–£4,117",priceNum:3683,beds:3,baths:1,sqft:"",amenities:["concierge","parking","gym","balcony"],agent:"Messila Residential",url:"https://www.rightmove.co.uk/properties/173556965",notes:"Portered block. Two units available.",available:"Now",cat:"active",photo:"https://media.rightmove.co.uk/property-photo/51173db51/173556965/51173db512179372a2c9a242747acbdd.jpeg"},
+  {id:35,name:"Boundary Road, St Johns Wood NW8",lat:51.5340,lng:-0.1780,price:"£3,200",priceNum:3200,beds:3,baths:1,sqft:"",amenities:["terrace"],agent:"R Residential",url:"https://www.rightmove.co.uk/properties/171958994",notes:"REDUCED. Maisonette. Large terrace.",available:"Now",cat:"active",photo:"https://media.rightmove.co.uk/property-photo/381b75241/171958994/381b75241393e6117f45b1fa0c51ae88.jpeg"},
+  {id:36,name:"St Quintin Avenue, Notting Hill W10",lat:51.5110,lng:-0.2130,price:"£3,700",priceNum:3700,beds:3,baths:2,sqft:"",amenities:["garden"],agent:"John D Wood",url:"https://www.rightmove.co.uk/properties/173616602",notes:"Victorian maisonette. 36ft garden.",available:"Now",cat:"active",photo:"https://media.rightmove.co.uk/property-photo/b45de20d2/173616602/b45de20d26936dad9cd88ffb9aef5f8c.jpeg"},
+  {id:37,name:"Seymour Place, Marylebone W1H (Dexters)",lat:51.5158,lng:-0.1615,price:"£5,174",priceNum:5174,beds:3,baths:2,sqft:"",amenities:[],agent:"Dexters",url:"https://www.onthemarket.com/details/19060089/",notes:"Period building. Built-in storage.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/19060089/1602159202/image-0-1024x1024.jpg"},
+  // MONITORED BUILDINGS
+  {id:38,name:"The Chilterns, Marylebone W1U",lat:51.5195,lng:-0.1500,price:"No 3-bed listed (~£14k+ expected)",priceNum:14000,beds:0,baths:0,sqft:"",amenities:["sauna","steam","gym","cinema","concierge"],agent:"Knight Frank / Napier Watt",url:"",notes:"3-beds extremely rare. Wine cellar (Berry Bros).",available:"Monitoring",cat:"monitor",photo:"https://media.architecturaldigest.com/photos/5a12dda05c270107c47fc4fa/2:3/w_1000,h_1500,c_limit/SLIDE%201-building-interior-lobby-1.jpg"},
+  {id:39,name:"The Whiteley, Bayswater W2",lat:51.5155,lng:-0.1880,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","concierge"],agent:"Savills / Domus Nova",url:"",notes:"Six Senses Spa (UK first). Padel court.",available:"Monitoring",cat:"monitor",photo:"https://content.fosterandpartners.com/api/media/getCroppedImage?imagePath=/media/1bnb2zfi/2259_fp843497_plus-journal_hero.jpg&width=1200&height=630&crop=true"},
+  {id:40,name:"One Kensington Gardens, W8",lat:51.5005,lng:-0.1870,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","concierge"],agent:"Strutt & Parker / Savills",url:"",notes:"David Chipperfield. 25m pool. 97 apartments.",available:"Monitoring",cat:"monitor",photo:"https://davidchipperfield.com/responsive-media/images/Projects/927-One-Kensington-Gardens/41528/927-dca-one-kensington-gardens-simon-menges-02-101d7b8599c0cc59.jpg"},
+  {id:41,name:"The Bryanston, W1H",lat:51.5140,lng:-0.1620,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Savills / Knight Frank",url:"",notes:'"London\'s healthiest building". Dr Sturm spa. On Hyde Park.',available:"Monitoring",cat:"monitor",photo:"https://thebryanston.co.uk/src/gfx/share.jpg"},
+  {id:42,name:"Park Modern, Bayswater Road W2",lat:51.5125,lng:-0.1830,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Rhodium",url:"",notes:"Overlooking Hyde Park. 25m pool + spa.",available:"Monitoring",cat:"monitor",photo:"https://1newhomes.com/assets/cities/spb/houses/fenton-whelan-london/park-modern-london/1-1-1.jpg"},
+  {id:43,name:"Chelsea Barracks, SW1W",lat:51.4905,lng:-0.1540,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Various",url:"",notes:"3 saunas, 3 steam rooms. 20m pool. Cold plunge. Belgravia.",available:"Monitoring",cat:"monitor",photo:"https://media.admiddleeast.com/photos/67b33d16220abe6e1755c7c7/2:3/w_1000,h_1500,c_limit/123620.jpg"},
+  {id:44,name:"No.1 Grosvenor Square, W1K",lat:51.5130,lng:-0.1505,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Savills",url:"",notes:"Former US Embassy. 44 residences. Mayfair.",available:"Monitoring",cat:"monitor",photo:"https://nla-production-projects.s3.eu-west-2.amazonaws.com/85244/NLA-Project-Thumbnail_No.1-Grosvenor-Square%2C-Mayfair_EPR-Architects.jpg?v=1769771980"},
+  {id:45,name:"Holland Park Villas, W8",lat:51.5020,lng:-0.2050,price:"£23,833+ (over budget)",priceNum:23833,beds:3,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Knight Frank / Savills",url:"",notes:"Ultra-luxury. Bodyism gym. Wine cellar.",available:"Monitoring",cat:"monitor",photo:"https://storage.googleapis.com/bd-uk-01/buildings-v2/1280x960/9332.jpg"},
+  {id:46,name:"Lincoln Square, Holborn WC2A",lat:51.5155,lng:-0.1175,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"CBRE / Savills",url:"",notes:"17,000+ sq ft amenities. Ice showers.",available:"Monitoring",cat:"monitor",photo:"https://1newhomes.com/assets/cities/spb/houses/lodha-group-london/lincoln-square-london/1-2.jpg"},
+  {id:47,name:"Gasholders, Kings Cross N1C",lat:51.5370,lng:-0.1250,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Knight Frank / Savills",url:"",notes:"Converted Victorian gasholders. Architectural icon.",available:"Monitoring",cat:"monitor",photo:"https://tuckeydesign.com/wp-content/uploads/2024/01/Tuckey-Design-Studio-Leisure-and-Commercial-Kings-Cross-Gasholders-London-Exterior-01-Photography-James-Brittain-scaled.jpg"},
+  {id:48,name:"Kensington Row, W14",lat:51.4960,lng:-0.2050,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Various",url:"",notes:"St Edward development. Near Olympia.",available:"Monitoring",cat:"monitor",photo:"https://www.berkeleygroup.co.uk/-/media/imported/developments/no-media-id/stedwardkenrowheadermontage2.ashx?rev=8cb106c3e4ca4c2da8b3fda632ba47dc&hash=E9874F7EDE08D9547CFBB505070C4F74"},
+  {id:51,name:"One Bishopsgate Plaza, EC3A",lat:51.5145,lng:-0.0810,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","concierge"],agent:"Savills / Strutt & Parker",url:"",notes:"Pan Pacific Hotel services. Infinity pool.",available:"Monitoring",cat:"monitor",photo:"https://nla-production-projects.s3.eu-west-2.amazonaws.com/73476/OBP-Thumbnail.jpg?v=1703066649"},
+  {id:52,name:"The Corniche, SE1",lat:51.4905,lng:-0.1210,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","concierge"],agent:"Garton Jones / Knight Frank",url:"",notes:"Thames views. 19th floor Skyline Club.",available:"Monitoring",cat:"monitor",photo:"https://www.berkeleygroup.co.uk/-/media/imported/developments/no-media-id/newheader1.ashx?rev=1256931ec07a4fcebe9ce700dfe0a8cc&hash=9D3D718FCD651CAF8CD5ED38791423FD"},
+  {id:53,name:"Postmark, Clerkenwell WC1X",lat:51.5250,lng:-0.1120,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Various",url:"",notes:"Near Kings Cross. Accessible pricing.",available:"Monitoring",cat:"monitor",photo:"https://1newhomes.com/assets/cities/spb/houses/taylor-wimpey-london/postmark-london/new-1-4.jpg"}
+];
+
+// ─── HELPERS ─────────────────────────────────────────────────────────
+function hasTerrace(p) { return p.amenities.some(a => a==='terrace'||a==='balcony'); }
+function hasSauna(p) { return p.amenities.some(a => a==='sauna'||a==='steam'); }
+function hasPool(p) { return p.amenities.includes('pool'); }
+function hasParking(p) { return p.amenities.includes('parking'); }
+function hasConcierge(p) { return p.amenities.includes('concierge'); }
+function isUnder6k(p) { return p.priceNum > 0 && p.priceNum < 6000; }
+
+function getColor(p) {
+  if (p.cat === 'monitor') return 'red';
+  if (hasSauna(p) && hasTerrace(p)) return 'orange-purple';
+  if (hasSauna(p)) return 'orange';
+  if (hasTerrace(p)) return 'purple';
+  return 'green';
+}
+
+function getCSSColor(color) {
+  const map = { orange:'#f0883e', purple:'#bc8cff', green:'#3fb950', red:'#f85149', 'orange-purple':'#f0883e' };
+  return map[color] || '#3fb950';
+}
+
+const amenityLabels = {
+  sauna:'🧖 Sauna', steam:'♨️ Steam', pool:'🏊 Pool', gym:'💪 Gym', cinema:'🎬 Cinema',
+  concierge:'🛎️ Concierge', furnished:'🛋️ Furnished', parking:'🅿️ Parking',
+  balcony:'🌿 Balcony', terrace:'🌿 Terrace', garden:'🌳 Garden'
+};
+
+// ─── MAP ─────────────────────────────────────────────────────────────
+const map = L.map('map', { zoomControl: true }).setView([51.509, -0.165], 13);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+  subdomains: 'abcd', maxZoom: 19
+}).addTo(map);
+
+// Hyde Park outline (simplified polygon)
+const hydeParkCoords = [
+  [51.5130, -0.1870],[51.5095, -0.1850],[51.5070, -0.1790],[51.5050, -0.1720],
+  [51.5040, -0.1620],[51.5030, -0.1530],[51.5025, -0.1500],[51.5060, -0.1500],
+  [51.5075, -0.1510],[51.5090, -0.1520],[51.5100, -0.1530],[51.5115, -0.1540],
+  [51.5130, -0.1560],[51.5140, -0.1580],[51.5150, -0.1610],[51.5155, -0.1650],
+  [51.5155, -0.1700],[51.5155, -0.1750],[51.5150, -0.1800],[51.5140, -0.1850],
+  [51.5130, -0.1870]
+];
+L.polygon(hydeParkCoords, {
+  color: '#3fb950', weight: 1.5, opacity: 0.35, fillColor: '#3fb950', fillOpacity: 0.04,
+  dashArray: '6,4'
+}).addTo(map);
+
+// ─── MARKERS ─────────────────────────────────────────────────────────
+const markers = {};
+
+function createMarker(p) {
+  const color = getColor(p);
+  const isSauna = p.cat === 'sauna' || (hasSauna(p) && p.cat !== 'monitor');
+  const cssClass = `marker-dot ${color}${isSauna ? ' sauna-pulse' : ''}`;
+  const size = p.cat === 'monitor' ? 12 : 16;
+
+  const icon = L.divIcon({
+    className: 'custom-marker',
+    html: `<div class="${cssClass}" style="width:${size}px;height:${size}px;"></div>`,
+    iconSize: [size, size],
+    iconAnchor: [size/2, size/2],
+    popupAnchor: [0, -size/2]
+  });
+
+  const marker = L.marker([p.lat, p.lng], { icon }).addTo(map);
+
+  const specsHtml = p.beds > 0
+    ? `<div class="popup-details">${p.beds} bed · ${p.baths} bath${p.sqft ? ' · '+p.sqft+' sqft' : ''}</div>`
+    : `<div class="popup-details" style="color:#f85149;">No 3-bed currently listed</div>`;
+
+  const btnHtml = p.url
+    ? `<a href="${p.url}" target="_blank" rel="noopener" class="popup-btn">View Listing ↗</a>`
+    : `<span class="popup-btn" style="background:#30363d;cursor:default;">Coming Soon</span>`;
+
+  marker.bindPopup(`
+    <div class="popup-title">${p.name}</div>
+    <div class="popup-price">${p.price}</div>
+    ${specsHtml}
+    <div class="popup-notes">${p.notes}</div>
+    ${btnHtml}
+  `, { maxWidth: 280 });
+
+  marker.on('click', () => highlightCard(p.id));
+  markers[p.id] = marker;
+}
+
+properties.forEach(createMarker);
+
+// ─── FILTERS ─────────────────────────────────────────────────────────
+const filters = [
+  { key:'all', label:'All', fn: ()=>true },
+  { key:'sauna', label:'🧖 Sauna/Steam', fn: hasSauna },
+  { key:'pool', label:'🏊 Pool', fn: hasPool },
+  { key:'terrace', label:'🌿 Terrace/Balcony', fn: hasTerrace },
+  { key:'parking', label:'🅿️ Parking', fn: hasParking },
+  { key:'concierge', label:'🛎️ Concierge', fn: hasConcierge },
+  { key:'under6k', label:'💰 Under £6k', fn: isUnder6k },
+  { key:'monitor', label:'📡 Monitored', fn: p => p.cat==='monitor' }
+];
+
+let activeFilters = new Set(['all']);
+let activeCardId = null;
+
+function toggleDropdown() {
+  const dd = document.getElementById('filterDropdown');
+  const btn = document.getElementById('filterToggle');
+  dd.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  const wrapper = document.getElementById('filterWrapper');
+  if (!wrapper.contains(e.target)) {
+    document.getElementById('filterDropdown').classList.remove('open');
+    document.getElementById('filterToggle').classList.remove('open');
+  }
+});
+
+function buildFilterBar() {
+  const dd = document.getElementById('filterDropdown');
+  dd.innerHTML = '';
+  filters.forEach((f, i) => {
+    if (i === 1) { // divider after "All"
+      const div = document.createElement('div');
+      div.className = 'filter-divider';
+      dd.appendChild(div);
+    }
+    const count = properties.filter(f.fn).length;
+    const item = document.createElement('div');
+    item.className = `filter-item${activeFilters.has(f.key) ? ' active' : ''}`;
+    item.innerHTML = `
+      <div class="check">${activeFilters.has(f.key) ? '✓' : ''}</div>
+      <div class="label">${f.label}</div>
+      <div class="count">${count}</div>
+    `;
+    item.onclick = (e) => { e.stopPropagation(); toggleFilter(f.key); };
+    dd.appendChild(item);
+  });
+
+  // Update toggle button badge
+  const badge = document.getElementById('filterActiveCount');
+  if (activeFilters.has('all')) {
+    badge.textContent = 'All';
+  } else {
+    badge.textContent = activeFilters.size + ' active';
+  }
+}
+
+function toggleFilter(key) {
+  if (key === 'all') {
+    activeFilters.clear();
+    activeFilters.add('all');
+  } else {
+    activeFilters.delete('all');
+    if (activeFilters.has(key)) {
+      activeFilters.delete(key);
+      if (activeFilters.size === 0) activeFilters.add('all');
+    } else {
+      activeFilters.add(key);
+    }
+  }
+  render();
+}
+
+// ─── SORT ────────────────────────────────────────────────────────────
+document.getElementById('sortSelect').addEventListener('change', render);
+
+function getFiltered() {
+  let list = properties;
+  if (!activeFilters.has('all')) {
+    list = list.filter(p => {
+      return [...activeFilters].every(key => {
+        const f = filters.find(ff => ff.key === key);
+        return f ? f.fn(p) : true;
+      });
+    });
+  }
+  const sort = document.getElementById('sortSelect').value;
+  list = [...list];
+  if (sort === 'price-asc') list.sort((a,b) => (a.priceNum||99999) - (b.priceNum||99999));
+  else if (sort === 'price-desc') list.sort((a,b) => (b.priceNum===99999?-1:b.priceNum) - (a.priceNum===99999?-1:a.priceNum));
+  else list.sort((a,b) => a.name.localeCompare(b.name));
+  return list;
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────
+function render() {
+  buildFilterBar();
+  const filtered = getFiltered();
+  const sidebar = document.getElementById('sidebar');
+
+  // Update result count
+  document.getElementById('resultCount').innerHTML =
+    `Showing <strong>${filtered.length}</strong> of <strong>${properties.length}</strong> properties`;
+
+  // Update marker visibility
+  properties.forEach(p => {
+    const visible = filtered.some(f => f.id === p.id);
+    if (visible && !map.hasLayer(markers[p.id])) markers[p.id].addTo(map);
+    else if (!visible && map.hasLayer(markers[p.id])) map.removeLayer(markers[p.id]);
+  });
+
+  if (filtered.length === 0) {
+    sidebar.innerHTML = `<div class="no-results"><h3>No properties match</h3><p>Try adjusting your filters</p></div>`;
+    return;
+  }
+
+  sidebar.innerHTML = filtered.map(p => {
+    const color = getColor(p);
+    const catClass = p.cat === 'sauna' ? 'cat-sauna' : p.cat === 'monitor' ? 'cat-monitor' : '';
+    const terraceClass = hasTerrace(p) ? 'has-terrace' : '';
+    const activeClass = activeCardId === p.id ? 'active' : '';
+    const isMonitor = p.cat === 'monitor';
+
+    const badge = isMonitor
+      ? `<span class="card-badge monitoring">📡 Monitoring</span>`
+      : `<span class="card-badge available">✓ ${p.available}</span>`;
+
+    const specs = p.beds > 0
+      ? `<div class="card-specs">
+           <span>🛏 ${p.beds} bed</span>
+           <span>🛁 ${p.baths} bath</span>
+           ${p.sqft ? `<span>📐 ${p.sqft} sqft</span>` : ''}
+         </div>`
+      : '';
+
+    const amenityTags = p.amenities.map(a => {
+      const isHighlight = (a==='sauna'||a==='steam');
+      return `<span class="amenity-tag${isHighlight?' highlight':''}">${amenityLabels[a]||a}</span>`;
+    }).join('');
+
+    const btn = p.url
+      ? `<a href="${p.url}" target="_blank" rel="noopener" class="card-btn" onclick="event.stopPropagation()">View Listing ↗</a>`
+      : `<span class="card-btn coming-soon">Coming Soon</span>`;
+
+    const imgHtml = p.photo
+      ? `<img src="${p.photo}" alt="${p.name}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=card-gradient></div>'"><div class="img-overlay"></div>`
+      : `<div class="card-gradient"></div>`;
+
+    return `
+      <div class="card ${catClass} ${terraceClass} ${activeClass}" id="card-${p.id}" onclick="selectProperty(${p.id})">
+        <div class="card-image">
+          ${imgHtml}
+          ${badge}
+        </div>
+        <div class="card-body">
+          <div class="card-price ${isMonitor?'monitor-price':''}">${p.price}</div>
+          <div class="card-address">${p.name}</div>
+          ${specs}
+          ${p.notes ? `<div class="card-notes">${p.notes}</div>` : ''}
+          <div class="card-amenities">${amenityTags}</div>
+          <div class="card-footer">
+            <div class="card-agent">🏠 ${p.agent}</div>
+            ${btn}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ─── INTERACTIONS ────────────────────────────────────────────────────
+function selectProperty(id) {
+  activeCardId = id;
+  const p = properties.find(pp => pp.id === id);
+  if (!p) return;
+
+  // Fly to marker
+  map.flyTo([p.lat, p.lng], 15, { duration: 0.8 });
+  markers[p.id].openPopup();
+
+  // Highlight card
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+  const card = document.getElementById(`card-${id}`);
+  if (card) {
+    card.classList.add('active');
+  }
+}
+
+function highlightCard(id) {
+  activeCardId = id;
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+  const card = document.getElementById(`card-${id}`);
+  if (card) {
+    card.classList.add('active');
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
