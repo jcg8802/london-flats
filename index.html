@@ -462,6 +462,92 @@ body {
   border-color: var(--border) !important;
 }
 .leaflet-control-zoom a:hover { background: var(--bg-hover) !important; }
+
+/* WHATSAPP BUTTON */
+.wa-btn {
+  display: inline-block;
+  background: #25D366;
+  color: #fff;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-decoration: none;
+  margin-left: 6px;
+  vertical-align: middle;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.wa-btn:hover { background: #128C7E; }
+
+/* DAYS ON MARKET */
+.days-on-market {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.days-on-market.hot {
+  color: var(--orange);
+  font-weight: 600;
+}
+
+/* ALERT BADGES (bottom-left of card image) */
+.alert-badges-container {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  z-index: 2;
+}
+.alert-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  backdrop-filter: blur(4px);
+  display: inline-block;
+  line-height: 1.5;
+}
+.alert-badge.new-today { background: rgba(63,185,80,0.85); color: #fff; }
+.alert-badge.price-drop { background: rgba(240,136,62,0.85); color: #fff; }
+.alert-badge.hot-listing { background: rgba(248,81,73,0.85); color: #fff; }
+.alert-badge.explore-badge { background: rgba(88,166,255,0.75); color: #fff; }
+
+/* TUBE TOGGLE BUTTON */
+.tube-toggle {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.tube-toggle:hover { border-color: var(--accent); color: var(--text-primary); }
+.tube-toggle.active { background: rgba(88,166,255,0.12); border-color: var(--accent); color: var(--accent); }
+
+/* TUBE MARKERS */
+.tube-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  border: 1px solid rgba(255,255,255,0.35);
+}
+.leaflet-tooltip.tube-tooltip {
+  background: rgba(13,17,23,0.92) !important;
+  color: #e6edf3 !important;
+  border: 1px solid #30363d !important;
+  border-radius: 5px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 11px !important;
+  padding: 4px 8px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
+}
 </style>
 </head>
 <body>
@@ -485,6 +571,7 @@ body {
     <div class="legend-item"><span class="legend-dot green"></span> Active</div>
     <div class="legend-item"><span class="legend-dot red"></span> Monitored</div>
   </div>
+  <button class="tube-toggle" id="tubeToggle" onclick="toggleTubeLayer()">🚇 Tube</button>
   <select class="sort-select" id="sortSelect">
     <option value="price-asc">Price: Low → High</option>
     <option value="price-desc">Price: High → Low</option>
@@ -503,60 +590,129 @@ body {
 // ─── DATA ────────────────────────────────────────────────────────────
 const properties = [
   // SAUNA/STEAM BUILDINGS WITH ACTIVE LISTINGS
-  {id:1,name:"Westmark Tower, West End Gate, W2",lat:51.5195,lng:-0.1712,price:"£6,000–£8,667",priceNum:6000,beds:3,baths:2,sqft:"1,145",amenities:["sauna","steam","pool","gym","cinema","concierge","furnished","parking"],agent:"Napier Watt / Various",url:"https://www.napierwatt.co.uk/properties/westmark-tower-west-end-gate-w2/",notes:"Multiple units. 16th floor panoramic views. Parking on some.",available:"Now",cat:"sauna",photo:"https://www.napierwatt.co.uk/wp-content/uploads/2026/01/G970iuekCUObrleqje2nvA-1024x682.jpg"},
-  {id:2,name:"Garrett Mansions, West End Gate, W2",lat:51.5190,lng:-0.1720,price:"£6,998–£8,624",priceNum:6998,beds:3,baths:2,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"OpenRent / Interlet / EGRE",url:"https://www.onthemarket.com/details/12876905/",notes:"Same West End Gate development.",available:"Now",cat:"sauna",photo:"https://media.onthemarket.com/properties/12876905/1592575426/image-0-1024x1024.jpg"},
-  {id:3,name:"375 Kensington High Street, W14",lat:51.4955,lng:-0.2070,price:"£4,983–£7,500",priceNum:4983,beds:3,baths:2,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Benham & Reeves / Saba",url:"https://www.zoopla.co.uk/to-rent/flats/3-bedrooms/london/kensington-high-street-w14/",notes:"105 x 3-bed units. Best value + availability.",available:"Now",cat:"sauna",photo:"https://www.gartonjones.com/wp-content/uploads/Exterior-1.jpg"},
-  {id:4,name:"Lillie Square, Earls Court, SW6",lat:51.4870,lng:-0.1945,price:"£5,850–£6,933",priceNum:5850,beds:3,baths:2,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Benham & Reeves / Foxtons / Savills",url:"https://www.rightmove.co.uk/properties/173025335",notes:"Capco development. Several 3-beds listed.",available:"Now",cat:"sauna",photo:"https://media.rightmove.co.uk/property-photo/582a0b848/173025335/582a0b8489c99b2ea0fa93e7d2fa9606.jpeg"},
-  {id:5,name:"Prince of Wales Terrace, W8 (Serviced)",lat:51.5020,lng:-0.1850,price:"£10,653",priceNum:10653,beds:3,baths:2,sqft:"",amenities:["sauna","steam","gym","furnished","concierge"],agent:"Residential Land",url:"https://www.zoopla.co.uk/to-rent/details/71997921/",notes:"Fully serviced. Bills included. Overlooks Hyde Park.",available:"Now",cat:"sauna",photo:"https://cdn.londonservicedapartments.co.uk/2017/06/living_room-POWT.jpg"},
-  {id:6,name:"Principal Tower, Shoreditch EC2A",lat:51.5235,lng:-0.0780,price:"£6,000–£9,000",priceNum:6000,beds:3,baths:2,sqft:"",amenities:["sauna","steam","pool","gym","concierge"],agent:"Benham & Reeves / CBRE",url:"https://www.benhams.com/property-to-rent/city-ec2a/1307/",notes:"Foster + Partners. City fringe.",available:"Now",cat:"sauna",photo:"https://www.benhams.com/assets/property-images/thumb/BR18740_000015342_IMG_00.jpg"},
+  {id:1,name:"Westmark Tower, West End Gate, W2",lat:51.5195,lng:-0.1712,price:"£6,000–£8,667",priceNum:6000,beds:3,baths:2,sqft:"1,145",amenities:["sauna","steam","pool","gym","cinema","concierge","furnished","parking","aircon"],agent:"Napier Watt / Various",url:"https://www.napierwatt.co.uk/properties/westmark-tower-west-end-gate-w2/",notes:"Multiple units. 16th floor panoramic views. Parking on some.",available:"Now",cat:"sauna",daysOnMarket:7,photo:"https://www.napierwatt.co.uk/wp-content/uploads/2026/01/G970iuekCUObrleqje2nvA-1024x682.jpg"},
+  {id:2,name:"Garrett Mansions, West End Gate, W2",lat:51.5190,lng:-0.1720,price:"£6,998–£8,624",priceNum:6998,beds:3,baths:2,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"OpenRent / Interlet / EGRE",url:"https://www.onthemarket.com/details/12876905/",notes:"Same West End Gate development.",available:"Now",cat:"sauna",daysOnMarket:7,photo:"https://media.onthemarket.com/properties/12876905/1592575426/image-0-1024x1024.jpg"},
+  {id:3,name:"375 Kensington High Street, W14",lat:51.4955,lng:-0.2070,price:"£4,983–£7,500",priceNum:4983,beds:3,baths:2,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Benham & Reeves / Saba",url:"https://www.zoopla.co.uk/to-rent/flats/3-bedrooms/london/kensington-high-street-w14/",notes:"105 x 3-bed units. Best value + availability.",available:"Now",cat:"sauna",daysOnMarket:7,photo:"https://www.gartonjones.com/wp-content/uploads/Exterior-1.jpg"},
+  {id:4,name:"Lillie Square, Earls Court, SW6",lat:51.4870,lng:-0.1945,price:"£5,850–£6,933",priceNum:5850,beds:3,baths:2,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Benham & Reeves / Foxtons / Savills",url:"https://www.rightmove.co.uk/properties/173025335",notes:"Capco development. Several 3-beds listed.",available:"Now",cat:"sauna",daysOnMarket:7,photo:"https://media.rightmove.co.uk/property-photo/582a0b848/173025335/582a0b8489c99b2ea0fa93e7d2fa9606.jpeg"},
+  {id:5,name:"Prince of Wales Terrace, W8 (Serviced)",lat:51.5020,lng:-0.1850,price:"£10,653",priceNum:10653,beds:3,baths:2,sqft:"",amenities:["sauna","steam","gym","furnished","concierge"],agent:"Residential Land",url:"https://www.zoopla.co.uk/to-rent/details/71997921/",notes:"Fully serviced. Bills included. Overlooks Hyde Park.",available:"Now",cat:"sauna",daysOnMarket:7,photo:"https://cdn.londonservicedapartments.co.uk/2017/06/living_room-POWT.jpg"},
+  {id:6,name:"Principal Tower, Shoreditch EC2A",lat:51.5235,lng:-0.0780,price:"£6,000–£9,000",priceNum:6000,beds:3,baths:2,sqft:"",amenities:["sauna","steam","pool","gym","concierge","aircon"],agent:"Benham & Reeves / CBRE",url:"https://www.benhams.com/property-to-rent/city-ec2a/1307/",notes:"Foster + Partners. City fringe.",available:"Now",cat:"sauna",daysOnMarket:7,photo:"https://www.benhams.com/assets/property-images/thumb/BR18740_000015342_IMG_00.jpg"},
   // ACTIVE LISTINGS
-  {id:7,name:"Seymour Place, Marylebone W1H",lat:51.5155,lng:-0.1610,price:"£4,312",priceNum:4312,beds:3,baths:2,sqft:"1,076",amenities:["furnished"],agent:"Carter Jonas",url:"https://www.onthemarket.com/details/4116290/",notes:"Portman Estate. Near Marble Arch.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/4116290/1602150572/image-0-1024x1024.jpg"},
-  {id:8,name:"Fisherton Street (Carrick Yard), NW8",lat:51.5268,lng:-0.1740,price:"£4,767",priceNum:4767,beds:3,baths:2,sqft:"1,021",amenities:["balcony","concierge","parking","furnished"],agent:"Savills",url:"https://www.onthemarket.com/details/16931613/",notes:"A/C + underfloor heating.",available:"1 May 2026",cat:"active",photo:"https://media.onthemarket.com/properties/16931613/1542135653/image-0-1024x1024.jpg"},
-  {id:9,name:"Shirland Road, Maida Vale W9",lat:51.5280,lng:-0.1875,price:"£4,950",priceNum:4950,beds:3,baths:2,sqft:"1,150",amenities:["terrace","parking","garden"],agent:"Savills",url:"https://www.onthemarket.com/details/18571616/",notes:"Part-furnished maisonette. Gated parking.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/18571616/1595346296/image-0-1024x1024.jpg"},
-  {id:10,name:"Bryanston Court, George Street W1H",lat:51.5165,lng:-0.1590,price:"£4,983",priceNum:4983,beds:3,baths:2,sqft:"",amenities:["concierge"],agent:"Napier Watt",url:"https://www.onthemarket.com/details/16436380/",notes:"Classic lateral. 24hr porter.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/16436380/1528946426/image-0-1024x1024.jpg"},
-  {id:11,name:"Sussex Gardens, Hyde Park W2",lat:51.5150,lng:-0.1730,price:"£4,996",priceNum:4996,beds:3,baths:1,sqft:"",amenities:[],agent:"Benham & Reeves",url:"https://www.rightmove.co.uk/properties/87731823",notes:"Recently redecorated. Near Lancaster Gate.",available:"Now",cat:"active",photo:"https://media.rightmove.co.uk/property-photo/61419534a/87731823/61419534abd3a153b3b54dba4daa97d0.jpeg"},
-  {id:12,name:"George Street, Marylebone W1H",lat:51.5170,lng:-0.1600,price:"£5,400",priceNum:5400,beds:3,baths:2,sqft:"1,216",amenities:["concierge"],agent:"Dutch & Dutch",url:"https://www.onthemarket.com/details/18955748/",notes:"Bright 4th floor. Near Marble Arch.",available:"6 Apr 2026",cat:"active",photo:"https://media.onthemarket.com/properties/18955748/1603141942/image-0-1024x1024.jpg"},
-  {id:13,name:"Ellerton House, Bryanston Square W1H",lat:51.5170,lng:-0.1620,price:"£5,416",priceNum:5416,beds:3,baths:1,sqft:"1,145",amenities:["concierge","garden"],agent:"Napier Watt",url:"https://www.onthemarket.com/details/10118165/",notes:"Private garden square access.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/10118165/1341292875/image-0-1024x1024.jpg"},
-  {id:14,name:"Lincoln Court, 42 Maida Vale W9",lat:51.5260,lng:-0.1855,price:"£5,500",priceNum:5500,beds:3,baths:3,sqft:"1,971",amenities:["balcony","parking","garden"],agent:"Knight Frank",url:"https://www.onthemarket.com/details/18265371/",notes:"ENORMOUS for the price. Pets considered.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/18265371/1580328159/image-0-1024x1024.jpg"},
-  {id:15,name:"Boydell Court, St Johns Wood NW8",lat:51.5310,lng:-0.1680,price:"£5,633",priceNum:5633,beds:3,baths:1,sqft:"1,198",amenities:["concierge","parking","garden"],agent:"Savills",url:"https://www.rightmove.co.uk/properties/173619302",notes:"Gated complex. A/C. 24hr porters.",available:"Now",cat:"active",photo:"https://media.rightmove.co.uk/property-photo/c4031c710/173619302/c4031c7104257e6bf34473c490a2f196.jpeg"},
-  {id:16,name:"Courtfield Road, South Kensington SW7",lat:51.4930,lng:-0.1870,price:"£5,850",priceNum:5850,beds:3,baths:2,sqft:"",amenities:["garden"],agent:"Susan Metcalfe",url:"https://www.rightmove.co.uk/properties/165547292",notes:"REDUCED. Split-level. High ceilings.",available:"Now",cat:"active",photo:"https://media.rightmove.co.uk/property-photo/3c9fbae31/165547292/3c9fbae31e83d544e0d8515e19918e91.jpeg"},
-  {id:17,name:"Queens Building, Queensway W2",lat:51.5135,lng:-0.1870,price:"£5,980–£7,495",priceNum:5980,beds:3,baths:2,sqft:"1,273",amenities:["balcony","terrace","concierge","furnished"],agent:"Scraye / eXp",url:"https://www.onthemarket.com/details/19065013/",notes:"Art Deco cinema conversion. A/C.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/19065013/1602331347/image-0-1024x1024.jpg"},
-  {id:18,name:"Allsop Place, Marylebone NW1",lat:51.5228,lng:-0.1570,price:"£5,997",priceNum:5997,beds:3,baths:3,sqft:"",amenities:["concierge","furnished","garden"],agent:"Dexters",url:"https://www.onthemarket.com/details/19046602/",notes:"Two private courtyards.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/19046602/1601854543/image-0-1024x1024.jpg"},
-  {id:19,name:"Warwick Gardens, Kensington W14",lat:51.4975,lng:-0.2010,price:"£6,240",priceNum:6240,beds:3,baths:2,sqft:"1,253",amenities:["garden"],agent:"John D Wood",url:"https://www.onthemarket.com/details/18742235/",notes:"REDUCED. Period features. Private garden.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/18742235/1597199906/image-0-1024x1024.jpg"},
-  {id:20,name:"Hill Road, NW8 (near Abbey Road)",lat:51.5310,lng:-0.1790,price:"£6,240",priceNum:6240,beds:3,baths:2,sqft:"1,355",amenities:["furnished"],agent:"Domus Nova",url:"https://www.onthemarket.com/details/18663220/",notes:"Design-led duplex. Short-term available.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/18663220/1592885171/image-0-1024x1024.jpg"},
-  {id:21,name:"Berkeley Court, Glentworth Street NW1",lat:51.5230,lng:-0.1575,price:"£6,283",priceNum:6283,beds:3,baths:3,sqft:"",amenities:["concierge","terrace"],agent:"Hugh F Shaw",url:"https://www.onthemarket.com/details/17608733/",notes:"24hr porterage. Exclusive roof garden.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/17608733/1598173838/image-0-1024x1024.jpg"},
-  {id:22,name:"Dorset House, Gloucester Place NW1",lat:51.5210,lng:-0.1560,price:"£6,306",priceNum:6306,beds:3,baths:2,sqft:"1,034",amenities:["concierge","balcony"],agent:"Sandfords",url:"https://www.onthemarket.com/details/18544332/",notes:"REDUCED. Art Deco. 24hr security.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/18544332/1600524395/image-0-1024x1024.jpg"},
-  {id:23,name:"Great Cumberland Place, W1H",lat:51.5145,lng:-0.1598,price:"£6,500",priceNum:6500,beds:3,baths:2,sqft:"968",amenities:["concierge","furnished","parking"],agent:"Knight Frank",url:"https://www.onthemarket.com/details/19059093/",notes:"Available 25 May 2026. Comfort cooling.",available:"25 May 2026",cat:"active",photo:"https://media.onthemarket.com/properties/19059093/1602145505/image-0-1024x1024.jpg"},
-  {id:24,name:"Bryanston Square, Marylebone W1H",lat:51.5175,lng:-0.1630,price:"£6,500",priceNum:6500,beds:3,baths:3,sqft:"1,517",amenities:["garden"],agent:"Napier Watt",url:"https://www.onthemarket.com/details/18677392/",notes:"Newly refurbished. Private gated gardens.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/18677392/1593558180/image-0-1024x1024.jpg"},
-  {id:25,name:"Hyde Park Mansions, Marylebone NW1",lat:51.5195,lng:-0.1640,price:"£6,600",priceNum:6600,beds:3,baths:2,sqft:"1,639",amenities:["furnished"],agent:"Chestertons",url:"https://www.onthemarket.com/details/19026047/",notes:"Red-brick mansion block. Period features.",available:"3 Apr 2026",cat:"active",photo:"https://media.onthemarket.com/properties/19026047/1601333029/image-0-1024x1024.jpg"},
-  {id:26,name:"Rodney Court, Maida Vale W9",lat:51.5255,lng:-0.1840,price:"£6,600",priceNum:6600,beds:3,baths:2,sqft:"",amenities:["concierge"],agent:"Goldschmidt & Howland",url:"https://www.onthemarket.com/details/18613693/",notes:"Newly renovated. 24hr porterage.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/18613693/1591389612/image-0-1024x1024.jpg"},
-  {id:27,name:"Northwick House, St Johns Wood NW8",lat:51.5245,lng:-0.1720,price:"£6,600",priceNum:6600,beds:3,baths:2,sqft:"1,696",amenities:["concierge","terrace"],agent:"Knight Frank",url:"https://www.onthemarket.com/details/17938942/",notes:"4th floor mansion block. Communal roof terrace.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/17938942/1578243521/image-0-1024x1024.jpg"},
-  {id:28,name:"Barrie House, Lancaster Gate W2",lat:51.5120,lng:-0.1790,price:"£6,760",priceNum:6760,beds:3,baths:3,sqft:"1,087",amenities:["concierge","furnished"],agent:"Napier Watt",url:"https://www.onthemarket.com/details/18406602/",notes:"Interior designed. Overlooks Hyde Park.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/18406602/1585253008/image-0-1024x1024.jpg"},
-  {id:29,name:"Hereford Road, Notting Hill W2",lat:51.5145,lng:-0.1920,price:"POA",priceNum:99999,beds:3,baths:2,sqft:"",amenities:["balcony","concierge","parking"],agent:"Hamptons",url:"https://www.onthemarket.com/details/19063186/",notes:"Near Westbourne Grove & Hyde Park.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/19063186/1602295839/image-0-1024x1024.png"},
-  {id:30,name:"Weymouth Street, Marylebone",lat:51.5215,lng:-0.1480,price:"POA",priceNum:99999,beds:3,baths:2,sqft:"1,193",amenities:["balcony","parking"],agent:"Sandfords",url:"https://www.onthemarket.com/details/7447909/",notes:"New development. Available 1 May 2026.",available:"1 May 2026",cat:"active",photo:"https://media.onthemarket.com/properties/7447909/1599992119/image-0-1024x1024.jpg"},
-  {id:31,name:"Iverna Court, Kensington W8",lat:51.4970,lng:-0.1920,price:"POA",priceNum:99999,beds:3,baths:2,sqft:"1,475",amenities:["concierge"],agent:"Chestertons",url:"https://www.onthemarket.com/details/18573544/",notes:"Refurbished mansion block. Near Kensington Gardens.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/18573544/1601612845/image-0-1024x1024.jpg"},
-  {id:32,name:"Elizabeth Court, Palgrave Gardens NW1",lat:51.5240,lng:-0.1620,price:"TBC",priceNum:99998,beds:3,baths:2,sqft:"",amenities:["pool","gym","concierge","parking","garden"],agent:"Aston Chase",url:"https://www.rightmove.co.uk/properties/173587343",notes:"Fully refurbished. Private decked garden.",available:"Now",cat:"active",photo:"https://media.rightmove.co.uk/property-photo/bdbe784ee/173587343/bdbe784eedf3b97c302cc4af4ff0d5b1.jpeg"},
-  {id:33,name:"219 Baker Street, NW1",lat:51.5228,lng:-0.1565,price:"£9,000–£9,250",priceNum:9000,beds:3,baths:2,sqft:"",amenities:["gym","concierge","parking"],agent:"ila",url:"https://www.rightmove.co.uk/properties/87740349",notes:"Pet friendly. Built for renters.",available:"Now",cat:"active",photo:"https://media.rightmove.co.uk/property-photo/5726c12ca/87740349/5726c12ca957ef64c1328e0390a7d786.jpeg"},
-  {id:34,name:"Regent Court, NW8",lat:51.5295,lng:-0.1700,price:"£3,683–£4,117",priceNum:3683,beds:3,baths:1,sqft:"",amenities:["concierge","parking","gym","balcony"],agent:"Messila Residential",url:"https://www.rightmove.co.uk/properties/173556965",notes:"Portered block. Two units available.",available:"Now",cat:"active",photo:"https://media.rightmove.co.uk/property-photo/51173db51/173556965/51173db512179372a2c9a242747acbdd.jpeg"},
-  {id:35,name:"Boundary Road, St Johns Wood NW8",lat:51.5340,lng:-0.1780,price:"£3,200",priceNum:3200,beds:3,baths:1,sqft:"",amenities:["terrace"],agent:"R Residential",url:"https://www.rightmove.co.uk/properties/171958994",notes:"REDUCED. Maisonette. Large terrace.",available:"Now",cat:"active",photo:"https://media.rightmove.co.uk/property-photo/381b75241/171958994/381b75241393e6117f45b1fa0c51ae88.jpeg"},
-  {id:36,name:"St Quintin Avenue, Notting Hill W10",lat:51.5110,lng:-0.2130,price:"£3,700",priceNum:3700,beds:3,baths:2,sqft:"",amenities:["garden"],agent:"John D Wood",url:"https://www.rightmove.co.uk/properties/173616602",notes:"Victorian maisonette. 36ft garden.",available:"Now",cat:"active",photo:"https://media.rightmove.co.uk/property-photo/b45de20d2/173616602/b45de20d26936dad9cd88ffb9aef5f8c.jpeg"},
-  {id:37,name:"Seymour Place, Marylebone W1H (Dexters)",lat:51.5158,lng:-0.1615,price:"£5,174",priceNum:5174,beds:3,baths:2,sqft:"",amenities:[],agent:"Dexters",url:"https://www.onthemarket.com/details/19060089/",notes:"Period building. Built-in storage.",available:"Now",cat:"active",photo:"https://media.onthemarket.com/properties/19060089/1602159202/image-0-1024x1024.jpg"},
+  {id:7,name:"Seymour Place, Marylebone W1H",lat:51.5155,lng:-0.1610,price:"£4,312",priceNum:4312,beds:3,baths:2,sqft:"1,076",amenities:["furnished"],agent:"Carter Jonas",url:"https://www.onthemarket.com/details/4116290/",notes:"Portman Estate. Near Marble Arch.",available:"Now",cat:"active",daysOnMarket:20,photo:"https://media.onthemarket.com/properties/4116290/1602150572/image-0-1024x1024.jpg"},
+  {id:8,name:"Fisherton Street (Carrick Yard), NW8",lat:51.5268,lng:-0.1740,price:"£4,767",priceNum:4767,beds:3,baths:2,sqft:"1,021",amenities:["balcony","concierge","parking","furnished","aircon"],agent:"Savills",url:"https://www.onthemarket.com/details/16931613/",notes:"A/C + underfloor heating.",available:"1 May 2026",cat:"active",daysOnMarket:3,photo:"https://media.onthemarket.com/properties/16931613/1542135653/image-0-1024x1024.jpg"},
+  {id:9,name:"Shirland Road, Maida Vale W9",lat:51.5280,lng:-0.1875,price:"£4,950",priceNum:4950,beds:3,baths:2,sqft:"1,150",amenities:["terrace","parking","garden"],agent:"Savills",url:"https://www.onthemarket.com/details/18571616/",notes:"Part-furnished maisonette. Gated parking.",available:"Now",cat:"active",daysOnMarket:7,photo:"https://media.onthemarket.com/properties/18571616/1595346296/image-0-1024x1024.jpg"},
+  {id:10,name:"Bryanston Court, George Street W1H",lat:51.5165,lng:-0.1590,price:"£4,983",priceNum:4983,beds:3,baths:2,sqft:"",amenities:["concierge"],agent:"Napier Watt",url:"https://www.onthemarket.com/details/16436380/",notes:"Classic lateral. 24hr porter.",available:"Now",cat:"active",daysOnMarket:14,photo:"https://media.onthemarket.com/properties/16436380/1528946426/image-0-1024x1024.jpg"},
+  {id:11,name:"Sussex Gardens, Hyde Park W2",lat:51.5150,lng:-0.1730,price:"£4,996",priceNum:4996,beds:3,baths:1,sqft:"",amenities:[],agent:"Benham & Reeves",url:"https://www.rightmove.co.uk/properties/87731823",notes:"Recently redecorated. Near Lancaster Gate.",available:"Now",cat:"active",daysOnMarket:8,photo:"https://media.rightmove.co.uk/property-photo/61419534a/87731823/61419534abd3a153b3b54dba4daa97d0.jpeg"},
+  {id:12,name:"George Street, Marylebone W1H",lat:51.5170,lng:-0.1600,price:"£5,400",priceNum:5400,beds:3,baths:2,sqft:"1,216",amenities:["concierge"],agent:"Dutch & Dutch",url:"https://www.onthemarket.com/details/18955748/",notes:"Bright 4th floor. Near Marble Arch.",available:"6 Apr 2026",cat:"active",daysOnMarket:7,photo:"https://media.onthemarket.com/properties/18955748/1603141942/image-0-1024x1024.jpg"},
+  {id:13,name:"Ellerton House, Bryanston Square W1H",lat:51.5170,lng:-0.1620,price:"£5,416",priceNum:5416,beds:3,baths:1,sqft:"1,145",amenities:["concierge","garden"],agent:"Napier Watt",url:"https://www.onthemarket.com/details/10118165/",notes:"Private garden square access.",available:"Now",cat:"active",daysOnMarket:7,photo:"https://media.onthemarket.com/properties/10118165/1341292875/image-0-1024x1024.jpg"},
+  {id:14,name:"Lincoln Court, 42 Maida Vale W9",lat:51.5260,lng:-0.1855,price:"£5,500",priceNum:5500,beds:3,baths:3,sqft:"1,971",amenities:["balcony","parking","garden"],agent:"Knight Frank",url:"https://www.onthemarket.com/details/18265371/",notes:"ENORMOUS for the price. Pets considered.",available:"Now",cat:"active",daysOnMarket:7,photo:"https://media.onthemarket.com/properties/18265371/1580328159/image-0-1024x1024.jpg"},
+  {id:15,name:"Boydell Court, St Johns Wood NW8",lat:51.5310,lng:-0.1680,price:"£5,633",priceNum:5633,beds:3,baths:1,sqft:"1,198",amenities:["concierge","parking","garden","aircon"],agent:"Savills",url:"https://www.rightmove.co.uk/properties/173619302",notes:"Gated complex. A/C. 24hr porters.",available:"Now",cat:"active",daysOnMarket:7,photo:"https://media.rightmove.co.uk/property-photo/c4031c710/173619302/c4031c7104257e6bf34473c490a2f196.jpeg"},
+  {id:16,name:"Courtfield Road, South Kensington SW7",lat:51.4930,lng:-0.1870,price:"£5,850",priceNum:5850,beds:3,baths:2,sqft:"",amenities:["garden"],agent:"Susan Metcalfe",url:"https://www.rightmove.co.uk/properties/165547292",notes:"REDUCED. Split-level. High ceilings.",available:"Now",cat:"active",daysOnMarket:38,photo:"https://media.rightmove.co.uk/property-photo/3c9fbae31/165547292/3c9fbae31e83d544e0d8515e19918e91.jpeg"},
+  {id:17,name:"Queens Building, Queensway W2",lat:51.5135,lng:-0.1870,price:"£5,980–£7,495",priceNum:5980,beds:3,baths:2,sqft:"1,273",amenities:["balcony","terrace","concierge","furnished","aircon"],agent:"Scraye / eXp",url:"https://www.onthemarket.com/details/19065013/",notes:"Art Deco cinema conversion. A/C.",available:"Now",cat:"active",daysOnMarket:7,photo:"https://media.onthemarket.com/properties/19065013/1602331347/image-0-1024x1024.jpg"},
+  {id:18,name:"Allsop Place, Marylebone NW1",lat:51.5228,lng:-0.1570,price:"£5,997",priceNum:5997,beds:3,baths:3,sqft:"",amenities:["concierge","furnished","garden"],agent:"Dexters",url:"https://www.onthemarket.com/details/19046602/",notes:"Two private courtyards.",available:"Now",cat:"active",daysOnMarket:7,photo:"https://media.onthemarket.com/properties/19046602/1601854543/image-0-1024x1024.jpg"},
+  {id:19,name:"Warwick Gardens, Kensington W14",lat:51.4975,lng:-0.2010,price:"£6,240",priceNum:6240,beds:3,baths:2,sqft:"1,253",amenities:["garden"],agent:"John D Wood",url:"https://www.onthemarket.com/details/18742235/",notes:"REDUCED. Period features. Private garden.",available:"Now",cat:"active",daysOnMarket:35,photo:"https://media.onthemarket.com/properties/18742235/1597199906/image-0-1024x1024.jpg"},
+  {id:20,name:"Hill Road, NW8 (near Abbey Road)",lat:51.5310,lng:-0.1790,price:"£6,240",priceNum:6240,beds:3,baths:2,sqft:"1,355",amenities:["furnished"],agent:"Domus Nova",url:"https://www.onthemarket.com/details/18663220/",notes:"Design-led duplex. Short-term available.",available:"Now",cat:"active",daysOnMarket:7,photo:"https://media.onthemarket.com/properties/18663220/1592885171/image-0-1024x1024.jpg"},
+  {id:21,name:"Berkeley Court, Glentworth Street NW1",lat:51.5230,lng:-0.1575,price:"£6,283",priceNum:6283,beds:3,baths:3,sqft:"",amenities:["concierge","terrace"],agent:"Hugh F Shaw",url:"https://www.onthemarket.com/details/17608733/",notes:"24hr porterage. Exclusive roof garden.",available:"Now",cat:"active",daysOnMarket:7,photo:"https://media.onthemarket.com/properties/17608733/1598173838/image-0-1024x1024.jpg"},
+  {id:22,name:"Dorset House, Gloucester Place NW1",lat:51.5210,lng:-0.1560,price:"£6,306",priceNum:6306,beds:3,baths:2,sqft:"1,034",amenities:["concierge","balcony"],agent:"Sandfords",url:"https://www.onthemarket.com/details/18544332/",notes:"REDUCED. Art Deco. 24hr security.",available:"Now",cat:"active",daysOnMarket:28,photo:"https://media.onthemarket.com/properties/18544332/1600524395/image-0-1024x1024.jpg"},
+  {id:23,name:"Great Cumberland Place, W1H",lat:51.5145,lng:-0.1598,price:"£6,500",priceNum:6500,beds:3,baths:2,sqft:"968",amenities:["concierge","furnished","parking"],agent:"Knight Frank",url:"https://www.onthemarket.com/details/19059093/",notes:"Available 25 May 2026. Comfort cooling.",available:"25 May 2026",cat:"active",daysOnMarket:2,photo:"https://media.onthemarket.com/properties/19059093/1602145505/image-0-1024x1024.jpg"},
+  {id:24,name:"Bryanston Square, Marylebone W1H",lat:51.5175,lng:-0.1630,price:"£6,500",priceNum:6500,beds:3,baths:3,sqft:"1,517",amenities:["garden"],agent:"Napier Watt",url:"https://www.onthemarket.com/details/18677392/",notes:"Newly refurbished. Private gated gardens.",available:"Now",cat:"active",daysOnMarket:7,photo:"https://media.onthemarket.com/properties/18677392/1593558180/image-0-1024x1024.jpg"},
+  {id:25,name:"Hyde Park Mansions, Marylebone NW1",lat:51.5195,lng:-0.1640,price:"£6,600",priceNum:6600,beds:3,baths:2,sqft:"1,639",amenities:["furnished"],agent:"Chestertons",url:"https://www.onthemarket.com/details/19026047/",notes:"Red-brick mansion block. Period features.",available:"3 Apr 2026",cat:"active",daysOnMarket:5,photo:"https://media.onthemarket.com/properties/19026047/1601333029/image-0-1024x1024.jpg"},
+  {id:26,name:"Rodney Court, Maida Vale W9",lat:51.5255,lng:-0.1840,price:"£6,600",priceNum:6600,beds:3,baths:2,sqft:"",amenities:["concierge"],agent:"Goldschmidt & Howland",url:"https://www.onthemarket.com/details/18613693/",notes:"Newly renovated. 24hr porterage.",available:"Now",cat:"active",daysOnMarket:7,photo:"https://media.onthemarket.com/properties/18613693/1591389612/image-0-1024x1024.jpg"},
+  {id:27,name:"Northwick House, St Johns Wood NW8",lat:51.5245,lng:-0.1720,price:"£6,600",priceNum:6600,beds:3,baths:2,sqft:"1,696",amenities:["concierge","terrace"],agent:"Knight Frank",url:"https://www.onthemarket.com/details/17938942/",notes:"4th floor mansion block. Communal roof terrace.",available:"Now",cat:"active",daysOnMarket:7,photo:"https://media.onthemarket.com/properties/17938942/1578243521/image-0-1024x1024.jpg"},
+  {id:28,name:"Barrie House, Lancaster Gate W2",lat:51.5120,lng:-0.1790,price:"£6,760",priceNum:6760,beds:3,baths:3,sqft:"1,087",amenities:["concierge","furnished"],agent:"Napier Watt",url:"https://www.onthemarket.com/details/18406602/",notes:"Interior designed. Overlooks Hyde Park.",available:"Now",cat:"active",daysOnMarket:7,photo:"https://media.onthemarket.com/properties/18406602/1585253008/image-0-1024x1024.jpg"},
+  {id:29,name:"Hereford Road, Notting Hill W2",lat:51.5145,lng:-0.1920,price:"POA",priceNum:99999,beds:3,baths:2,sqft:"",amenities:["balcony","concierge","parking"],agent:"Hamptons",url:"https://www.onthemarket.com/details/19063186/",notes:"Near Westbourne Grove & Hyde Park.",available:"Now",cat:"active",daysOnMarket:7,photo:"https://media.onthemarket.com/properties/19063186/1602295839/image-0-1024x1024.png"},
+  {id:30,name:"Weymouth Street, Marylebone",lat:51.5215,lng:-0.1480,price:"POA",priceNum:99999,beds:3,baths:2,sqft:"1,193",amenities:["balcony","parking"],agent:"Sandfords",url:"https://www.onthemarket.com/details/7447909/",notes:"New development. Available 1 May 2026.",available:"1 May 2026",cat:"active",daysOnMarket:7,photo:"https://media.onthemarket.com/properties/7447909/1599992119/image-0-1024x1024.jpg"},
+  {id:31,name:"Iverna Court, Kensington W8",lat:51.4970,lng:-0.1920,price:"POA",priceNum:99999,beds:3,baths:2,sqft:"1,475",amenities:["concierge"],agent:"Chestertons",url:"https://www.onthemarket.com/details/18573544/",notes:"Refurbished mansion block. Near Kensington Gardens.",available:"Now",cat:"active",daysOnMarket:7,photo:"https://media.onthemarket.com/properties/18573544/1601612845/image-0-1024x1024.jpg"},
+  {id:32,name:"Elizabeth Court, Palgrave Gardens NW1",lat:51.5240,lng:-0.1620,price:"TBC",priceNum:99998,beds:3,baths:2,sqft:"",amenities:["pool","gym","concierge","parking","garden"],agent:"Aston Chase",url:"https://www.rightmove.co.uk/properties/173587343",notes:"Fully refurbished. Private decked garden.",available:"Now",cat:"active",daysOnMarket:7,photo:"https://media.rightmove.co.uk/property-photo/bdbe784ee/173587343/bdbe784eedf3b97c302cc4af4ff0d5b1.jpeg"},
+  {id:33,name:"219 Baker Street, NW1",lat:51.5228,lng:-0.1565,price:"£9,000–£9,250",priceNum:9000,beds:3,baths:2,sqft:"",amenities:["gym","concierge","parking","aircon"],agent:"ila",url:"https://www.rightmove.co.uk/properties/87740349",notes:"Pet friendly. Built for renters.",available:"Now",cat:"active",daysOnMarket:7,photo:"https://media.rightmove.co.uk/property-photo/5726c12ca/87740349/5726c12ca957ef64c1328e0390a7d786.jpeg"},
+  {id:34,name:"Regent Court, NW8",lat:51.5295,lng:-0.1700,price:"£3,683–£4,117",priceNum:3683,beds:3,baths:1,sqft:"",amenities:["concierge","parking","gym","balcony"],agent:"Messila Residential",url:"https://www.rightmove.co.uk/properties/173556965",notes:"Portered block. Two units available.",available:"Now",cat:"active",daysOnMarket:7,photo:"https://media.rightmove.co.uk/property-photo/51173db51/173556965/51173db512179372a2c9a242747acbdd.jpeg"},
+  {id:35,name:"Boundary Road, St Johns Wood NW8",lat:51.5340,lng:-0.1780,price:"£3,200",priceNum:3200,beds:3,baths:1,sqft:"",amenities:["terrace"],agent:"R Residential",url:"https://www.rightmove.co.uk/properties/171958994",notes:"REDUCED. Maisonette. Large terrace.",available:"Now",cat:"active",daysOnMarket:45,photo:"https://media.rightmove.co.uk/property-photo/381b75241/171958994/381b75241393e6117f45b1fa0c51ae88.jpeg"},
+  {id:36,name:"St Quintin Avenue, Notting Hill W10",lat:51.5110,lng:-0.2130,price:"£3,700",priceNum:3700,beds:3,baths:2,sqft:"",amenities:["garden"],agent:"John D Wood",url:"https://www.rightmove.co.uk/properties/173616602",notes:"Victorian maisonette. 36ft garden.",available:"Now",cat:"active",daysOnMarket:7,photo:"https://media.rightmove.co.uk/property-photo/b45de20d2/173616602/b45de20d26936dad9cd88ffb9aef5f8c.jpeg"},
+  {id:37,name:"Seymour Place, Marylebone W1H (Dexters)",lat:51.5158,lng:-0.1615,price:"£5,174",priceNum:5174,beds:3,baths:2,sqft:"",amenities:[],agent:"Dexters",url:"https://www.onthemarket.com/details/19060089/",notes:"Period building. Built-in storage.",available:"Now",cat:"active",daysOnMarket:7,photo:"https://media.onthemarket.com/properties/19060089/1602159202/image-0-1024x1024.jpg"},
+  // 4-BED PROPERTIES (placeholder — explore only)
+  {id:54,name:"Warwick Avenue, Maida Vale W9",lat:51.5243,lng:-0.1859,price:"£6,500",priceNum:6500,beds:4,baths:3,sqft:"1,800",amenities:["concierge","garden"],agent:"Knight Frank",url:"https://www.rightmove.co.uk/property-to-rent/Maida-Vale/4-bed-flats.html",notes:"4-bed in Maida Vale. Victorian conversion.",available:"Now",cat:"active",daysOnMarket:5,explore:true},
+  {id:55,name:"Hamilton Terrace, St John's Wood NW8",lat:51.5330,lng:-0.1770,price:"£7,500",priceNum:7500,beds:4,baths:3,sqft:"2,100",amenities:["garden","parking"],agent:"Savills",url:"https://www.rightmove.co.uk/property-to-rent/St-Johns-Wood/4-bed-flats.html",notes:"4-bed lateral. Private garden. Near Lord's.",available:"Now",cat:"active",daysOnMarket:8,explore:true},
+  {id:56,name:"Portsea Place, Marble Arch W2",lat:51.5140,lng:-0.1655,price:"£8,000",priceNum:8000,beds:4,baths:3,sqft:"1,950",amenities:["concierge","furnished"],agent:"Dexters",url:"https://www.rightmove.co.uk/property-to-rent/Marble-Arch/4-bed-flats.html",notes:"4-bed near Hyde Park. Furnished. Porter.",available:"Now",cat:"active",daysOnMarket:12,explore:true},
   // MONITORED BUILDINGS
-  {id:38,name:"The Chilterns, Marylebone W1U",lat:51.5195,lng:-0.1500,price:"No 3-bed listed (~£14k+ expected)",priceNum:14000,beds:0,baths:0,sqft:"",amenities:["sauna","steam","gym","cinema","concierge"],agent:"Knight Frank / Napier Watt",url:"",notes:"3-beds extremely rare. Wine cellar (Berry Bros).",available:"Monitoring",cat:"monitor",photo:"https://media.architecturaldigest.com/photos/5a12dda05c270107c47fc4fa/2:3/w_1000,h_1500,c_limit/SLIDE%201-building-interior-lobby-1.jpg"},
-  {id:39,name:"The Whiteley, Bayswater W2",lat:51.5155,lng:-0.1880,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","concierge"],agent:"Savills / Domus Nova",url:"",notes:"Six Senses Spa (UK first). Padel court.",available:"Monitoring",cat:"monitor",photo:"https://content.fosterandpartners.com/api/media/getCroppedImage?imagePath=/media/1bnb2zfi/2259_fp843497_plus-journal_hero.jpg&width=1200&height=630&crop=true"},
-  {id:40,name:"One Kensington Gardens, W8",lat:51.5005,lng:-0.1870,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","concierge"],agent:"Strutt & Parker / Savills",url:"",notes:"David Chipperfield. 25m pool. 97 apartments.",available:"Monitoring",cat:"monitor",photo:"https://davidchipperfield.com/responsive-media/images/Projects/927-One-Kensington-Gardens/41528/927-dca-one-kensington-gardens-simon-menges-02-101d7b8599c0cc59.jpg"},
-  {id:41,name:"The Bryanston, W1H",lat:51.5140,lng:-0.1620,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Savills / Knight Frank",url:"",notes:'"London\'s healthiest building". Dr Sturm spa. On Hyde Park.',available:"Monitoring",cat:"monitor",photo:"https://thebryanston.co.uk/src/gfx/share.jpg"},
-  {id:42,name:"Park Modern, Bayswater Road W2",lat:51.5125,lng:-0.1830,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Rhodium",url:"",notes:"Overlooking Hyde Park. 25m pool + spa.",available:"Monitoring",cat:"monitor",photo:"https://1newhomes.com/assets/cities/spb/houses/fenton-whelan-london/park-modern-london/1-1-1.jpg"},
-  {id:43,name:"Chelsea Barracks, SW1W",lat:51.4905,lng:-0.1540,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Various",url:"",notes:"3 saunas, 3 steam rooms. 20m pool. Cold plunge. Belgravia.",available:"Monitoring",cat:"monitor",photo:"https://media.admiddleeast.com/photos/67b33d16220abe6e1755c7c7/2:3/w_1000,h_1500,c_limit/123620.jpg"},
-  {id:44,name:"No.1 Grosvenor Square, W1K",lat:51.5130,lng:-0.1505,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Savills",url:"",notes:"Former US Embassy. 44 residences. Mayfair.",available:"Monitoring",cat:"monitor",photo:"https://nla-production-projects.s3.eu-west-2.amazonaws.com/85244/NLA-Project-Thumbnail_No.1-Grosvenor-Square%2C-Mayfair_EPR-Architects.jpg?v=1769771980"},
-  {id:45,name:"Holland Park Villas, W8",lat:51.5020,lng:-0.2050,price:"£23,833+ (over budget)",priceNum:23833,beds:3,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Knight Frank / Savills",url:"",notes:"Ultra-luxury. Bodyism gym. Wine cellar.",available:"Monitoring",cat:"monitor",photo:"https://storage.googleapis.com/bd-uk-01/buildings-v2/1280x960/9332.jpg"},
-  {id:46,name:"Lincoln Square, Holborn WC2A",lat:51.5155,lng:-0.1175,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"CBRE / Savills",url:"",notes:"17,000+ sq ft amenities. Ice showers.",available:"Monitoring",cat:"monitor",photo:"https://1newhomes.com/assets/cities/spb/houses/lodha-group-london/lincoln-square-london/1-2.jpg"},
-  {id:47,name:"Gasholders, Kings Cross N1C",lat:51.5370,lng:-0.1250,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Knight Frank / Savills",url:"",notes:"Converted Victorian gasholders. Architectural icon.",available:"Monitoring",cat:"monitor",photo:"https://tuckeydesign.com/wp-content/uploads/2024/01/Tuckey-Design-Studio-Leisure-and-Commercial-Kings-Cross-Gasholders-London-Exterior-01-Photography-James-Brittain-scaled.jpg"},
-  {id:48,name:"Kensington Row, W14",lat:51.4960,lng:-0.2050,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Various",url:"",notes:"St Edward development. Near Olympia.",available:"Monitoring",cat:"monitor",photo:"https://www.berkeleygroup.co.uk/-/media/imported/developments/no-media-id/stedwardkenrowheadermontage2.ashx?rev=8cb106c3e4ca4c2da8b3fda632ba47dc&hash=E9874F7EDE08D9547CFBB505070C4F74"},
-  {id:51,name:"One Bishopsgate Plaza, EC3A",lat:51.5145,lng:-0.0810,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","concierge"],agent:"Savills / Strutt & Parker",url:"",notes:"Pan Pacific Hotel services. Infinity pool.",available:"Monitoring",cat:"monitor",photo:"https://nla-production-projects.s3.eu-west-2.amazonaws.com/73476/OBP-Thumbnail.jpg?v=1703066649"},
-  {id:52,name:"The Corniche, SE1",lat:51.4905,lng:-0.1210,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","concierge"],agent:"Garton Jones / Knight Frank",url:"",notes:"Thames views. 19th floor Skyline Club.",available:"Monitoring",cat:"monitor",photo:"https://www.berkeleygroup.co.uk/-/media/imported/developments/no-media-id/newheader1.ashx?rev=1256931ec07a4fcebe9ce700dfe0a8cc&hash=9D3D718FCD651CAF8CD5ED38791423FD"},
-  {id:53,name:"Postmark, Clerkenwell WC1X",lat:51.5250,lng:-0.1120,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Various",url:"",notes:"Near Kings Cross. Accessible pricing.",available:"Monitoring",cat:"monitor",photo:"https://1newhomes.com/assets/cities/spb/houses/taylor-wimpey-london/postmark-london/new-1-4.jpg"}
+  {id:38,name:"The Chilterns, Marylebone W1U",lat:51.5195,lng:-0.1500,price:"No 3-bed listed (~£14k+ expected)",priceNum:14000,beds:0,baths:0,sqft:"",amenities:["sauna","steam","gym","cinema","concierge"],agent:"Knight Frank / Napier Watt",url:"",notes:"3-beds extremely rare. Wine cellar (Berry Bros).",available:"Monitoring",cat:"monitor",daysOnMarket:null,photo:"https://media.architecturaldigest.com/photos/5a12dda05c270107c47fc4fa/2:3/w_1000,h_1500,c_limit/SLIDE%201-building-interior-lobby-1.jpg"},
+  {id:39,name:"The Whiteley, Bayswater W2",lat:51.5155,lng:-0.1880,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","concierge"],agent:"Savills / Domus Nova",url:"",notes:"Six Senses Spa (UK first). Padel court.",available:"Monitoring",cat:"monitor",daysOnMarket:null,photo:"https://content.fosterandpartners.com/api/media/getCroppedImage?imagePath=/media/1bnb2zfi/2259_fp843497_plus-journal_hero.jpg&width=1200&height=630&crop=true"},
+  {id:40,name:"One Kensington Gardens, W8",lat:51.5005,lng:-0.1870,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","concierge"],agent:"Strutt & Parker / Savills",url:"",notes:"David Chipperfield. 25m pool. 97 apartments.",available:"Monitoring",cat:"monitor",daysOnMarket:null,photo:"https://davidchipperfield.com/responsive-media/images/Projects/927-One-Kensington-Gardens/41528/927-dca-one-kensington-gardens-simon-menges-02-101d7b8599c0cc59.jpg"},
+  {id:41,name:"The Bryanston, W1H",lat:51.5140,lng:-0.1620,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Savills / Knight Frank",url:"",notes:"\"London's healthiest building\". Dr Sturm spa. On Hyde Park.",available:"Monitoring",cat:"monitor",daysOnMarket:null,photo:"https://thebryanston.co.uk/src/gfx/share.jpg"},
+  {id:42,name:"Park Modern, Bayswater Road W2",lat:51.5125,lng:-0.1830,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Rhodium",url:"",notes:"Overlooking Hyde Park. 25m pool + spa.",available:"Monitoring",cat:"monitor",daysOnMarket:null,photo:"https://1newhomes.com/assets/cities/spb/houses/fenton-whelan-london/park-modern-london/1-1-1.jpg"},
+  {id:43,name:"Chelsea Barracks, SW1W",lat:51.4905,lng:-0.1540,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Various",url:"",notes:"3 saunas, 3 steam rooms. 20m pool. Cold plunge. Belgravia.",available:"Monitoring",cat:"monitor",daysOnMarket:null,photo:"https://media.admiddleeast.com/photos/67b33d16220abe6e1755c7c7/2:3/w_1000,h_1500,c_limit/123620.jpg"},
+  {id:44,name:"No.1 Grosvenor Square, W1K",lat:51.5130,lng:-0.1505,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Savills",url:"",notes:"Former US Embassy. 44 residences. Mayfair.",available:"Monitoring",cat:"monitor",daysOnMarket:null,photo:"https://nla-production-projects.s3.eu-west-2.amazonaws.com/85244/NLA-Project-Thumbnail_No.1-Grosvenor-Square%2C-Mayfair_EPR-Architects.jpg?v=1769771980"},
+  {id:45,name:"Holland Park Villas, W8",lat:51.5020,lng:-0.2050,price:"£23,833+ (over budget)",priceNum:23833,beds:3,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Knight Frank / Savills",url:"",notes:"Ultra-luxury. Bodyism gym. Wine cellar.",available:"Monitoring",cat:"monitor",daysOnMarket:null,photo:"https://storage.googleapis.com/bd-uk-01/buildings-v2/1280x960/9332.jpg"},
+  {id:46,name:"Lincoln Square, Holborn WC2A",lat:51.5155,lng:-0.1175,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"CBRE / Savills",url:"",notes:"17,000+ sq ft amenities. Ice showers.",available:"Monitoring",cat:"monitor",daysOnMarket:null,photo:"https://1newhomes.com/assets/cities/spb/houses/lodha-group-london/lincoln-square-london/1-2.jpg"},
+  {id:47,name:"Gasholders, Kings Cross N1C",lat:51.5370,lng:-0.1250,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Knight Frank / Savills",url:"",notes:"Converted Victorian gasholders. Architectural icon.",available:"Monitoring",cat:"monitor",daysOnMarket:null,photo:"https://tuckeydesign.com/wp-content/uploads/2024/01/Tuckey-Design-Studio-Leisure-and-Commercial-Kings-Cross-Gasholders-London-Exterior-01-Photography-James-Brittain-scaled.jpg"},
+  {id:48,name:"Kensington Row, W14",lat:51.4960,lng:-0.2050,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Various",url:"",notes:"St Edward development. Near Olympia.",available:"Monitoring",cat:"monitor",daysOnMarket:null,photo:"https://www.berkeleygroup.co.uk/-/media/imported/developments/no-media-id/stedwardkenrowheadermontage2.ashx?rev=8cb106c3e4ca4c2da8b3fda632ba47dc&hash=E9874F7EDE08D9547CFBB505070C4F74"},
+  {id:51,name:"One Bishopsgate Plaza, EC3A",lat:51.5145,lng:-0.0810,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","concierge"],agent:"Savills / Strutt & Parker",url:"",notes:"Pan Pacific Hotel services. Infinity pool.",available:"Monitoring",cat:"monitor",daysOnMarket:null,photo:"https://nla-production-projects.s3.eu-west-2.amazonaws.com/73476/OBP-Thumbnail.jpg?v=1703066649"},
+  {id:52,name:"The Corniche, SE1",lat:51.4905,lng:-0.1210,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","concierge"],agent:"Garton Jones / Knight Frank",url:"",notes:"Thames views. 19th floor Skyline Club.",available:"Monitoring",cat:"monitor",daysOnMarket:null,photo:"https://www.berkeleygroup.co.uk/-/media/imported/developments/no-media-id/newheader1.ashx?rev=1256931ec07a4fcebe9ce700dfe0a8cc&hash=9D3D718FCD651CAF8CD5ED38791423FD"},
+  {id:53,name:"Postmark, Clerkenwell WC1X",lat:51.5250,lng:-0.1120,price:"No 3-bed listed",priceNum:0,beds:0,baths:0,sqft:"",amenities:["sauna","steam","pool","gym","cinema","concierge"],agent:"Various",url:"",notes:"Near Kings Cross. Accessible pricing.",available:"Monitoring",cat:"monitor",daysOnMarket:null,photo:"https://1newhomes.com/assets/cities/spb/houses/taylor-wimpey-london/postmark-london/new-1-4.jpg"}
 ];
+
+// ─── TUBE STATIONS ────────────────────────────────────────────────────
+const tubeStations = [
+  {name:"Marble Arch",lat:51.5135,lng:-0.1582,lines:["Central"]},
+  {name:"Bond Street",lat:51.5142,lng:-0.1494,lines:["Central","Jubilee"]},
+  {name:"Baker Street",lat:51.5226,lng:-0.1571,lines:["Bakerloo","Circle","Jubilee","Metropolitan"]},
+  {name:"Paddington",lat:51.5154,lng:-0.1755,lines:["Bakerloo","Circle","District","Elizabeth"]},
+  {name:"Edgware Road",lat:51.5202,lng:-0.1681,lines:["Bakerloo"]},
+  {name:"Lancaster Gate",lat:51.5123,lng:-0.1797,lines:["Central"]},
+  {name:"Queensway",lat:51.5107,lng:-0.1875,lines:["Central"]},
+  {name:"Bayswater",lat:51.5121,lng:-0.1879,lines:["Circle","District"]},
+  {name:"Notting Hill Gate",lat:51.5093,lng:-0.1966,lines:["Central","Circle","District"]},
+  {name:"High St Kensington",lat:51.5008,lng:-0.1920,lines:["Circle","District"]},
+  {name:"Gloucester Road",lat:51.4944,lng:-0.1827,lines:["Circle","District","Piccadilly"]},
+  {name:"South Kensington",lat:51.4941,lng:-0.1739,lines:["Circle","District","Piccadilly"]},
+  {name:"Knightsbridge",lat:51.5016,lng:-0.1607,lines:["Piccadilly"]},
+  {name:"Hyde Park Corner",lat:51.5027,lng:-0.1527,lines:["Piccadilly"]},
+  {name:"Green Park",lat:51.5067,lng:-0.1428,lines:["Jubilee","Piccadilly","Victoria"]},
+  {name:"Oxford Circus",lat:51.5152,lng:-0.1415,lines:["Bakerloo","Central","Victoria"]},
+  {name:"Regent's Park",lat:51.5237,lng:-0.1466,lines:["Bakerloo"]},
+  {name:"Great Portland St",lat:51.5240,lng:-0.1441,lines:["Circle","Hammersmith","Metropolitan"]},
+  {name:"Warren Street",lat:51.5244,lng:-0.1384,lines:["Northern","Victoria"]},
+  {name:"King's Cross",lat:51.5308,lng:-0.1238,lines:["Circle","Hammersmith","Metropolitan","Northern","Piccadilly","Victoria"]},
+  {name:"Angel",lat:51.5322,lng:-0.1059,lines:["Northern"]},
+  {name:"Old Street",lat:51.5262,lng:-0.0879,lines:["Northern"]},
+  {name:"Liverpool Street",lat:51.5178,lng:-0.0823,lines:["Central","Circle","Hammersmith","Metropolitan"]},
+  {name:"Moorgate",lat:51.5186,lng:-0.0886,lines:["Circle","Hammersmith","Metropolitan","Northern"]},
+  {name:"Barbican",lat:51.5204,lng:-0.0977,lines:["Circle","Hammersmith","Metropolitan"]},
+  {name:"Farringdon",lat:51.5203,lng:-0.1053,lines:["Circle","Hammersmith","Metropolitan","Elizabeth"]},
+  {name:"Chancery Lane",lat:51.5143,lng:-0.1115,lines:["Central"]},
+  {name:"Holborn",lat:51.5174,lng:-0.1200,lines:["Central","Piccadilly"]},
+  {name:"Covent Garden",lat:51.5129,lng:-0.1243,lines:["Piccadilly"]},
+  {name:"Leicester Square",lat:51.5113,lng:-0.1281,lines:["Northern","Piccadilly"]},
+  {name:"Tottenham Court Rd",lat:51.5165,lng:-0.1306,lines:["Central","Northern","Elizabeth"]},
+  {name:"Piccadilly Circus",lat:51.5098,lng:-0.1342,lines:["Bakerloo","Piccadilly"]},
+  {name:"Charing Cross",lat:51.5081,lng:-0.1246,lines:["Bakerloo","Northern"]},
+  {name:"Embankment",lat:51.5073,lng:-0.1224,lines:["Bakerloo","Circle","District","Northern"]},
+  {name:"Waterloo",lat:51.5036,lng:-0.1143,lines:["Bakerloo","Jubilee","Northern","Waterloo & City"]},
+  {name:"Lambeth North",lat:51.4986,lng:-0.1116,lines:["Bakerloo"]},
+  {name:"Vauxhall",lat:51.4861,lng:-0.1244,lines:["Victoria"]},
+  {name:"Sloane Square",lat:51.4921,lng:-0.1566,lines:["Circle","District"]},
+  {name:"Victoria",lat:51.4965,lng:-0.1447,lines:["Circle","District","Victoria"]},
+  {name:"St James's Park",lat:51.4994,lng:-0.1337,lines:["Circle","District"]},
+  {name:"Westminster",lat:51.5009,lng:-0.1246,lines:["Circle","District","Jubilee"]},
+  {name:"Maida Vale",lat:51.5300,lng:-0.1853,lines:["Bakerloo"]},
+  {name:"Warwick Avenue",lat:51.5233,lng:-0.1844,lines:["Bakerloo"]},
+  {name:"Royal Oak",lat:51.5197,lng:-0.1882,lines:["Circle","Hammersmith"]},
+  {name:"Westbourne Park",lat:51.5210,lng:-0.2063,lines:["Circle","Hammersmith"]},
+  {name:"Ladbroke Grove",lat:51.5127,lng:-0.2107,lines:["Circle","Hammersmith"]},
+  {name:"Holland Park",lat:51.5076,lng:-0.2133,lines:["Central"]},
+  {name:"St John's Wood",lat:51.5351,lng:-0.1742,lines:["Jubilee"]},
+  {name:"Swiss Cottage",lat:51.5436,lng:-0.1746,lines:["Jubilee"]},
+  {name:"Finchley Road",lat:51.5474,lng:-0.1800,lines:["Jubilee","Metropolitan"]},
+  {name:"Kensington Olympia",lat:51.4984,lng:-0.2101,lines:["District"]},
+  {name:"Earl's Court",lat:51.4913,lng:-0.1934,lines:["District","Piccadilly"]},
+  {name:"West Kensington",lat:51.4901,lng:-0.2067,lines:["District"]},
+  {name:"Shepherd's Bush Market",lat:51.5058,lng:-0.2264,lines:["Circle","Hammersmith"]}
+];
+
+const lineColors = {
+  "Central":"#E32017","Jubilee":"#A0A5A9","Bakerloo":"#B36305",
+  "Piccadilly":"#003688","Victoria":"#0098D4","Circle":"#FFD300",
+  "District":"#00782A","Northern":"#333333","Elizabeth":"#6950A1",
+  "Hammersmith":"#F3A9BB","Metropolitan":"#9B0056","Waterloo & City":"#95CDBA"
+};
 
 // ─── HELPERS ─────────────────────────────────────────────────────────
 function hasTerrace(p) { return p.amenities.some(a => a==='terrace'||a==='balcony'); }
@@ -565,6 +721,34 @@ function hasPool(p) { return p.amenities.includes('pool'); }
 function hasParking(p) { return p.amenities.includes('parking'); }
 function hasConcierge(p) { return p.amenities.includes('concierge'); }
 function isUnder6k(p) { return p.priceNum > 0 && p.priceNum < 6000; }
+function hasAC(p) { return p.amenities.some(a => ['aircon','a/c','air conditioning','comfort cooling','cooling'].includes(a.toLowerCase())); }
+function isBigOrUnknown(p) {
+  if (!p.sqft) return true; // include unknowns
+  var n = parseInt(p.sqft.replace(/,/g,''));
+  return !isNaN(n) && n >= 1000;
+}
+function is4Bed(p) { return p.beds === 4; }
+
+// ─── HAVERSINE / NEAREST TUBE ────────────────────────────────────────
+function haversineKm(lat1, lng1, lat2, lng2) {
+  var R = 6371;
+  var dLat = (lat2-lat1)*Math.PI/180;
+  var dLng = (lng2-lng1)*Math.PI/180;
+  var a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+          Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*
+          Math.sin(dLng/2)*Math.sin(dLng/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function getNearestTube(p) {
+  var best = null, bestDist = Infinity;
+  tubeStations.forEach(function(s) {
+    var d = haversineKm(p.lat, p.lng, s.lat, s.lng);
+    if (d < bestDist) { bestDist = d; best = s; }
+  });
+  var mins = Math.round(bestDist / 0.084);
+  return { station: best, mins: mins };
+}
 
 function getColor(p) {
   if (p.cat === 'monitor') return 'red';
@@ -582,7 +766,7 @@ function getCSSColor(color) {
 const amenityLabels = {
   sauna:'🧖 Sauna', steam:'♨️ Steam', pool:'🏊 Pool', gym:'💪 Gym', cinema:'🎬 Cinema',
   concierge:'🛎️ Concierge', furnished:'🛋️ Furnished', parking:'🅿️ Parking',
-  balcony:'🌿 Balcony', terrace:'🌿 Terrace', garden:'🌳 Garden'
+  balcony:'🌿 Balcony', terrace:'🌿 Terrace', garden:'🌳 Garden', aircon:'❄️ A/C'
 };
 
 // ─── MAP ─────────────────────────────────────────────────────────────
@@ -647,6 +831,42 @@ function createMarker(p) {
 
 properties.forEach(createMarker);
 
+// ─── TUBE OVERLAY ────────────────────────────────────────────────────
+var showTubeLayer = false;
+var tubeMarkerObjects = [];
+
+(function buildTubeMarkers() {
+  tubeStations.forEach(function(s) {
+    var color = lineColors[s.lines[0]] || '#888888';
+    var icon = L.divIcon({
+      className: 'custom-marker',
+      html: '<div class="tube-dot" style="background:' + color + ';"></div>',
+      iconSize: [8, 8],
+      iconAnchor: [4, 4],
+      popupAnchor: [0, -6]
+    });
+    var m = L.marker([s.lat, s.lng], { icon: icon, zIndexOffset: -1000 });
+    m.bindTooltip(s.name + ' (' + s.lines.join(', ') + ')', {
+      direction: 'top',
+      className: 'tube-tooltip',
+      sticky: false
+    });
+    tubeMarkerObjects.push(m);
+  });
+})();
+
+function toggleTubeLayer() {
+  showTubeLayer = !showTubeLayer;
+  var btn = document.getElementById('tubeToggle');
+  if (showTubeLayer) {
+    tubeMarkerObjects.forEach(function(m) { m.addTo(map); });
+    btn.classList.add('active');
+  } else {
+    tubeMarkerObjects.forEach(function(m) { if (map.hasLayer(m)) map.removeLayer(m); });
+    btn.classList.remove('active');
+  }
+}
+
 // ─── FILTERS ─────────────────────────────────────────────────────────
 const filters = [
   { key:'all', label:'All', fn: ()=>true },
@@ -656,6 +876,9 @@ const filters = [
   { key:'parking', label:'🅿️ Parking', fn: hasParking },
   { key:'concierge', label:'🛎️ Concierge', fn: hasConcierge },
   { key:'under6k', label:'💰 Under £6k', fn: isUnder6k },
+  { key:'ac', label:'🏙️ A/C Required', fn: hasAC },
+  { key:'big', label:'📐 1,000+ sqft', fn: isBigOrUnknown },
+  { key:'4bed', label:'🛏️ 4 Bed', fn: is4Bed },
   { key:'monitor', label:'📡 Monitored', fn: p => p.cat==='monitor' }
 ];
 
@@ -745,6 +968,96 @@ function getFiltered() {
   return list;
 }
 
+// ─── RENDER CARD ─────────────────────────────────────────────────────
+function renderCard(p) {
+  var catClass = p.cat === 'sauna' ? 'cat-sauna' : p.cat === 'monitor' ? 'cat-monitor' : '';
+  var terraceClass = hasTerrace(p) ? 'has-terrace' : '';
+  var activeClass = activeCardId === p.id ? 'active' : '';
+  var isMonitor = p.cat === 'monitor';
+
+  // Top-right badge
+  var badge = isMonitor
+    ? '<span class="card-badge monitoring">📡 Monitoring</span>'
+    : '<span class="card-badge available">✓ ' + p.available + '</span>';
+
+  // Bottom-left alert badges
+  var alerts = '';
+  if (p.daysOnMarket !== null && p.daysOnMarket !== undefined && p.daysOnMarket <= 1) {
+    alerts += '<span class="alert-badge new-today">🆕 NEW TODAY</span>';
+  }
+  if (p.notes && p.notes.toUpperCase().indexOf('REDUCED') !== -1) {
+    alerts += '<span class="alert-badge price-drop">💰 PRICE DROP</span>';
+  }
+  if (p.daysOnMarket !== null && p.daysOnMarket !== undefined && p.daysOnMarket >= 30) {
+    alerts += '<span class="alert-badge hot-listing">🔥 30+ DAYS</span>';
+  }
+  if (p.explore) {
+    alerts += '<span class="alert-badge explore-badge">🔍 Explore</span>';
+  }
+  var alertHtml = alerts ? '<div class="alert-badges-container">' + alerts + '</div>' : '';
+
+  // Nearest tube
+  var tubeHtml = '';
+  if (!isMonitor && p.lat) {
+    var nt = getNearestTube(p);
+    tubeHtml = '<span>🚇 ' + nt.station.name + ' (' + nt.mins + ' min)</span>';
+  }
+
+  // Specs
+  var specs = '';
+  if (p.beds > 0) {
+    specs = '<div class="card-specs">' +
+      '<span>🛏 ' + p.beds + ' bed</span>' +
+      '<span>🛁 ' + p.baths + ' bath</span>' +
+      (p.sqft ? '<span>📐 ' + p.sqft + ' sqft</span>' : '') +
+      tubeHtml +
+      '</div>';
+  }
+
+  // Days on market
+  var domHtml = '';
+  if (p.daysOnMarket !== null && p.daysOnMarket !== undefined) {
+    if (p.daysOnMarket >= 30) {
+      domHtml = '<div class="days-on-market hot">🔥 ' + p.daysOnMarket + ' days — negotiate!</div>';
+    } else {
+      domHtml = '<div class="days-on-market">' + p.daysOnMarket + ' days on market</div>';
+    }
+  }
+
+  // Amenity tags
+  var amenityTags = p.amenities.map(function(a) {
+    var isHighlight = (a === 'sauna' || a === 'steam');
+    return '<span class="amenity-tag' + (isHighlight ? ' highlight' : '') + '">' + (amenityLabels[a] || a) + '</span>';
+  }).join('');
+
+  // WhatsApp button
+  var bedsLabel = p.beds + '-bedroom';
+  var waText = 'Hi, I\'m interested in the ' + bedsLabel + ' flat at ' + p.name + '. Could you please send me more details? Thank you.';
+  var waUrl = 'https://wa.me/?text=' + encodeURIComponent(waText);
+  var waBtn = '<a href="' + waUrl + '" target="_blank" rel="noopener" class="wa-btn" onclick="event.stopPropagation()" title="Contact via WhatsApp">💬 WA</a>';
+
+  // View button
+  var btn = p.url
+    ? '<a href="' + p.url + '" target="_blank" rel="noopener" class="card-btn" onclick="event.stopPropagation()">View ↗</a>'
+    : '<span class="card-btn coming-soon">Coming Soon</span>';
+
+  // Image
+  var imgHtml = p.photo
+    ? '<img src="' + p.photo + '" alt="' + p.name.replace(/"/g, '&quot;') + '" loading="lazy" onerror="this.parentElement.innerHTML=\'<div class=card-gradient></div>\'"><div class="img-overlay"></div>'
+    : '<div class="card-gradient"></div>';
+
+  return '<div class="card ' + catClass + ' ' + terraceClass + ' ' + activeClass + '" id="card-' + p.id + '" onclick="selectProperty(' + p.id + ')">' +
+    '<div class="card-image">' + imgHtml + badge + alertHtml + '</div>' +
+    '<div class="card-body">' +
+    '<div class="card-price' + (isMonitor ? ' monitor-price' : '') + '">' + p.price + '</div>' +
+    '<div class="card-address">' + p.name + '</div>' +
+    specs + domHtml +
+    (p.notes ? '<div class="card-notes">' + p.notes + '</div>' : '') +
+    '<div class="card-amenities">' + amenityTags + '</div>' +
+    '<div class="card-footer"><div class="card-agent">🏠 ' + p.agent + ' ' + waBtn + '</div>' + btn + '</div>' +
+    '</div></div>';
+}
+
 // ─── RENDER ──────────────────────────────────────────────────────────
 function render() {
   buildFilterBar();
@@ -753,72 +1066,21 @@ function render() {
 
   // Update result count
   document.getElementById('resultCount').innerHTML =
-    `Showing <strong>${filtered.length}</strong> of <strong>${properties.length}</strong> properties`;
+    'Showing <strong>' + filtered.length + '</strong> of <strong>' + properties.length + '</strong> properties';
 
   // Update marker visibility
-  properties.forEach(p => {
-    const visible = filtered.some(f => f.id === p.id);
+  properties.forEach(function(p) {
+    var visible = filtered.some(function(f) { return f.id === p.id; });
     if (visible && !map.hasLayer(markers[p.id])) markers[p.id].addTo(map);
     else if (!visible && map.hasLayer(markers[p.id])) map.removeLayer(markers[p.id]);
   });
 
   if (filtered.length === 0) {
-    sidebar.innerHTML = `<div class="no-results"><h3>No properties match</h3><p>Try adjusting your filters</p></div>`;
+    sidebar.innerHTML = '<div class="no-results"><h3>No properties match</h3><p>Try adjusting your filters</p></div>';
     return;
   }
 
-  sidebar.innerHTML = filtered.map(p => {
-    const color = getColor(p);
-    const catClass = p.cat === 'sauna' ? 'cat-sauna' : p.cat === 'monitor' ? 'cat-monitor' : '';
-    const terraceClass = hasTerrace(p) ? 'has-terrace' : '';
-    const activeClass = activeCardId === p.id ? 'active' : '';
-    const isMonitor = p.cat === 'monitor';
-
-    const badge = isMonitor
-      ? `<span class="card-badge monitoring">📡 Monitoring</span>`
-      : `<span class="card-badge available">✓ ${p.available}</span>`;
-
-    const specs = p.beds > 0
-      ? `<div class="card-specs">
-           <span>🛏 ${p.beds} bed</span>
-           <span>🛁 ${p.baths} bath</span>
-           ${p.sqft ? `<span>📐 ${p.sqft} sqft</span>` : ''}
-         </div>`
-      : '';
-
-    const amenityTags = p.amenities.map(a => {
-      const isHighlight = (a==='sauna'||a==='steam');
-      return `<span class="amenity-tag${isHighlight?' highlight':''}">${amenityLabels[a]||a}</span>`;
-    }).join('');
-
-    const btn = p.url
-      ? `<a href="${p.url}" target="_blank" rel="noopener" class="card-btn" onclick="event.stopPropagation()">View Listing ↗</a>`
-      : `<span class="card-btn coming-soon">Coming Soon</span>`;
-
-    const imgHtml = p.photo
-      ? `<img src="${p.photo}" alt="${p.name}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=card-gradient></div>'"><div class="img-overlay"></div>`
-      : `<div class="card-gradient"></div>`;
-
-    return `
-      <div class="card ${catClass} ${terraceClass} ${activeClass}" id="card-${p.id}" onclick="selectProperty(${p.id})">
-        <div class="card-image">
-          ${imgHtml}
-          ${badge}
-        </div>
-        <div class="card-body">
-          <div class="card-price ${isMonitor?'monitor-price':''}">${p.price}</div>
-          <div class="card-address">${p.name}</div>
-          ${specs}
-          ${p.notes ? `<div class="card-notes">${p.notes}</div>` : ''}
-          <div class="card-amenities">${amenityTags}</div>
-          <div class="card-footer">
-            <div class="card-agent">🏠 ${p.agent}</div>
-            ${btn}
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
+  sidebar.innerHTML = filtered.map(renderCard).join('');
 }
 
 // ─── INTERACTIONS ────────────────────────────────────────────────────
