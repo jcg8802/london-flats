@@ -529,24 +529,22 @@ body {
   white-space: nowrap;
 }
 .tube-toggle:hover { border-color: var(--accent); color: var(--text-primary); }
-.tube-toggle.active { background: rgba(88,166,255,0.12); border-color: var(--accent); color: var(--accent); }
+.tube-toggle.active { background: #E32017; border-color: #E32017; color: white; }
 
 /* TUBE MARKERS */
-.tube-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
-  border: 1px solid rgba(255,255,255,0.35);
+.tube-tooltip {
+  background: rgba(20, 20, 40, 0.9);
+  color: #e0e0e0;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
 }
-.leaflet-tooltip.tube-tooltip {
-  background: rgba(13,17,23,0.92) !important;
-  color: #e6edf3 !important;
-  border: 1px solid #30363d !important;
-  border-radius: 5px !important;
-  font-family: 'Inter', sans-serif !important;
-  font-size: 11px !important;
-  padding: 4px 8px !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
+.tube-tooltip::before {
+  display: none;
 }
 </style>
 </head>
@@ -659,70 +657,217 @@ const properties = [
   {id:64,name:"Addison Road, Holland Park W14",lat:51.5010,lng:-0.2120,price:"£4,600",priceNum:4600,beds:3,baths:2,sqft:"",amenities:["concierge","parking"],agent:"Hamptons Kensington",url:"https://www.rightmove.co.uk/properties/173723804",notes:"🆕 NEW TODAY. 6th floor with lift, porter. Communal heating/hot water included in rent. Permit parking. Furnished or unfurnished.",available:"2 Jun 2026",cat:"active",daysOnMarket:0,photo:""}
 ];
 
-// ─── TUBE STATIONS ────────────────────────────────────────────────────
-const tubeStations = [
-  {name:"Marble Arch",lat:51.5135,lng:-0.1582,lines:["Central"]},
-  {name:"Bond Street",lat:51.5142,lng:-0.1494,lines:["Central","Jubilee"]},
-  {name:"Baker Street",lat:51.5226,lng:-0.1571,lines:["Bakerloo","Circle","Jubilee","Metropolitan"]},
-  {name:"Paddington",lat:51.5154,lng:-0.1755,lines:["Bakerloo","Circle","District","Elizabeth"]},
-  {name:"Edgware Road",lat:51.5202,lng:-0.1681,lines:["Bakerloo"]},
-  {name:"Lancaster Gate",lat:51.5123,lng:-0.1797,lines:["Central"]},
-  {name:"Queensway",lat:51.5107,lng:-0.1875,lines:["Central"]},
-  {name:"Bayswater",lat:51.5121,lng:-0.1879,lines:["Circle","District"]},
-  {name:"Notting Hill Gate",lat:51.5093,lng:-0.1966,lines:["Central","Circle","District"]},
-  {name:"High St Kensington",lat:51.5008,lng:-0.1920,lines:["Circle","District"]},
-  {name:"Gloucester Road",lat:51.4944,lng:-0.1827,lines:["Circle","District","Piccadilly"]},
-  {name:"South Kensington",lat:51.4941,lng:-0.1739,lines:["Circle","District","Piccadilly"]},
-  {name:"Knightsbridge",lat:51.5016,lng:-0.1607,lines:["Piccadilly"]},
-  {name:"Hyde Park Corner",lat:51.5027,lng:-0.1527,lines:["Piccadilly"]},
-  {name:"Green Park",lat:51.5067,lng:-0.1428,lines:["Jubilee","Piccadilly","Victoria"]},
-  {name:"Oxford Circus",lat:51.5152,lng:-0.1415,lines:["Bakerloo","Central","Victoria"]},
-  {name:"Regent's Park",lat:51.5237,lng:-0.1466,lines:["Bakerloo"]},
-  {name:"Great Portland St",lat:51.5240,lng:-0.1441,lines:["Circle","Hammersmith","Metropolitan"]},
-  {name:"Warren Street",lat:51.5244,lng:-0.1384,lines:["Northern","Victoria"]},
-  {name:"King's Cross",lat:51.5308,lng:-0.1238,lines:["Circle","Hammersmith","Metropolitan","Northern","Piccadilly","Victoria"]},
-  {name:"Angel",lat:51.5322,lng:-0.1059,lines:["Northern"]},
-  {name:"Old Street",lat:51.5262,lng:-0.0879,lines:["Northern"]},
-  {name:"Liverpool Street",lat:51.5178,lng:-0.0823,lines:["Central","Circle","Hammersmith","Metropolitan"]},
-  {name:"Moorgate",lat:51.5186,lng:-0.0886,lines:["Circle","Hammersmith","Metropolitan","Northern"]},
-  {name:"Barbican",lat:51.5204,lng:-0.0977,lines:["Circle","Hammersmith","Metropolitan"]},
-  {name:"Farringdon",lat:51.5203,lng:-0.1053,lines:["Circle","Hammersmith","Metropolitan","Elizabeth"]},
-  {name:"Chancery Lane",lat:51.5143,lng:-0.1115,lines:["Central"]},
-  {name:"Holborn",lat:51.5174,lng:-0.1200,lines:["Central","Piccadilly"]},
-  {name:"Covent Garden",lat:51.5129,lng:-0.1243,lines:["Piccadilly"]},
-  {name:"Leicester Square",lat:51.5113,lng:-0.1281,lines:["Northern","Piccadilly"]},
-  {name:"Tottenham Court Rd",lat:51.5165,lng:-0.1306,lines:["Central","Northern","Elizabeth"]},
-  {name:"Piccadilly Circus",lat:51.5098,lng:-0.1342,lines:["Bakerloo","Piccadilly"]},
-  {name:"Charing Cross",lat:51.5081,lng:-0.1246,lines:["Bakerloo","Northern"]},
-  {name:"Embankment",lat:51.5073,lng:-0.1224,lines:["Bakerloo","Circle","District","Northern"]},
-  {name:"Waterloo",lat:51.5036,lng:-0.1143,lines:["Bakerloo","Jubilee","Northern","Waterloo & City"]},
-  {name:"Lambeth North",lat:51.4986,lng:-0.1116,lines:["Bakerloo"]},
-  {name:"Vauxhall",lat:51.4861,lng:-0.1244,lines:["Victoria"]},
-  {name:"Sloane Square",lat:51.4921,lng:-0.1566,lines:["Circle","District"]},
-  {name:"Victoria",lat:51.4965,lng:-0.1447,lines:["Circle","District","Victoria"]},
-  {name:"St James's Park",lat:51.4994,lng:-0.1337,lines:["Circle","District"]},
-  {name:"Westminster",lat:51.5009,lng:-0.1246,lines:["Circle","District","Jubilee"]},
-  {name:"Maida Vale",lat:51.5300,lng:-0.1853,lines:["Bakerloo"]},
-  {name:"Warwick Avenue",lat:51.5233,lng:-0.1844,lines:["Bakerloo"]},
-  {name:"Royal Oak",lat:51.5197,lng:-0.1882,lines:["Circle","Hammersmith"]},
-  {name:"Westbourne Park",lat:51.5210,lng:-0.2063,lines:["Circle","Hammersmith"]},
-  {name:"Ladbroke Grove",lat:51.5127,lng:-0.2107,lines:["Circle","Hammersmith"]},
-  {name:"Holland Park",lat:51.5076,lng:-0.2133,lines:["Central"]},
-  {name:"St John's Wood",lat:51.5351,lng:-0.1742,lines:["Jubilee"]},
-  {name:"Swiss Cottage",lat:51.5436,lng:-0.1746,lines:["Jubilee"]},
-  {name:"Finchley Road",lat:51.5474,lng:-0.1800,lines:["Jubilee","Metropolitan"]},
-  {name:"Kensington Olympia",lat:51.4984,lng:-0.2101,lines:["District"]},
-  {name:"Earl's Court",lat:51.4913,lng:-0.1934,lines:["District","Piccadilly"]},
-  {name:"West Kensington",lat:51.4901,lng:-0.2067,lines:["District"]},
-  {name:"Shepherd's Bush Market",lat:51.5058,lng:-0.2264,lines:["Circle","Hammersmith"]}
+// ─── TUBE LINES ───────────────────────────────────────────────────────
+const tubeLines = [
+  {
+    name: "Central", color: "#E32017", weight: 5,
+    stations: [
+      {name:"Shepherd's Bush Market", lat:51.5058, lng:-0.2264},
+      {name:"Holland Park", lat:51.5076, lng:-0.2133},
+      {name:"Notting Hill Gate", lat:51.5093, lng:-0.1966},
+      {name:"Queensway", lat:51.5107, lng:-0.1875},
+      {name:"Lancaster Gate", lat:51.5123, lng:-0.1797},
+      {name:"Marble Arch", lat:51.5135, lng:-0.1582},
+      {name:"Bond Street", lat:51.5142, lng:-0.1494},
+      {name:"Oxford Circus", lat:51.5152, lng:-0.1415},
+      {name:"Tottenham Court Road", lat:51.5165, lng:-0.1306},
+      {name:"Holborn", lat:51.5174, lng:-0.1200},
+      {name:"Chancery Lane", lat:51.5143, lng:-0.1115},
+      {name:"St Paul's", lat:51.5146, lng:-0.0973},
+      {name:"Bank", lat:51.5133, lng:-0.0886}
+    ]
+  },
+  {
+    name: "Jubilee", color: "#A0A5A9", weight: 5,
+    stations: [
+      {name:"Finchley Road", lat:51.5474, lng:-0.1800},
+      {name:"Swiss Cottage", lat:51.5436, lng:-0.1746},
+      {name:"St John's Wood", lat:51.5351, lng:-0.1742},
+      {name:"Baker Street", lat:51.5226, lng:-0.1571},
+      {name:"Bond Street", lat:51.5142, lng:-0.1494},
+      {name:"Green Park", lat:51.5067, lng:-0.1428},
+      {name:"Westminster", lat:51.5009, lng:-0.1246},
+      {name:"Waterloo", lat:51.5036, lng:-0.1143},
+      {name:"Southwark", lat:51.5040, lng:-0.1050},
+      {name:"London Bridge", lat:51.5056, lng:-0.0863}
+    ]
+  },
+  {
+    name: "Bakerloo", color: "#B36305", weight: 5,
+    stations: [
+      {name:"Maida Vale", lat:51.5300, lng:-0.1853},
+      {name:"Warwick Avenue", lat:51.5233, lng:-0.1844},
+      {name:"Paddington", lat:51.5154, lng:-0.1755},
+      {name:"Edgware Road", lat:51.5202, lng:-0.1681},
+      {name:"Marylebone", lat:51.5223, lng:-0.1631},
+      {name:"Baker Street", lat:51.5226, lng:-0.1571},
+      {name:"Regent's Park", lat:51.5237, lng:-0.1466},
+      {name:"Oxford Circus", lat:51.5152, lng:-0.1415},
+      {name:"Piccadilly Circus", lat:51.5098, lng:-0.1342},
+      {name:"Charing Cross", lat:51.5081, lng:-0.1246},
+      {name:"Embankment", lat:51.5073, lng:-0.1224},
+      {name:"Waterloo", lat:51.5036, lng:-0.1143},
+      {name:"Lambeth North", lat:51.4986, lng:-0.1116},
+      {name:"Elephant & Castle", lat:51.4943, lng:-0.1001}
+    ]
+  },
+  {
+    name: "Piccadilly", color: "#003688", weight: 5,
+    stations: [
+      {name:"Hammersmith", lat:51.4934, lng:-0.2251},
+      {name:"Barons Court", lat:51.4905, lng:-0.2133},
+      {name:"West Kensington", lat:51.4901, lng:-0.2067},
+      {name:"Earl's Court", lat:51.4913, lng:-0.1934},
+      {name:"Gloucester Road", lat:51.4944, lng:-0.1827},
+      {name:"South Kensington", lat:51.4941, lng:-0.1739},
+      {name:"Knightsbridge", lat:51.5016, lng:-0.1607},
+      {name:"Hyde Park Corner", lat:51.5027, lng:-0.1527},
+      {name:"Green Park", lat:51.5067, lng:-0.1428},
+      {name:"Piccadilly Circus", lat:51.5098, lng:-0.1342},
+      {name:"Covent Garden", lat:51.5129, lng:-0.1243},
+      {name:"Leicester Square", lat:51.5113, lng:-0.1281},
+      {name:"Holborn", lat:51.5174, lng:-0.1200},
+      {name:"Russell Square", lat:51.5232, lng:-0.1240},
+      {name:"King's Cross St Pancras", lat:51.5308, lng:-0.1238}
+    ]
+  },
+  {
+    name: "Victoria", color: "#0098D4", weight: 5,
+    stations: [
+      {name:"Brixton", lat:51.4627, lng:-0.1145},
+      {name:"Stockwell", lat:51.4724, lng:-0.1226},
+      {name:"Vauxhall", lat:51.4861, lng:-0.1244},
+      {name:"Pimlico", lat:51.4893, lng:-0.1334},
+      {name:"Victoria", lat:51.4965, lng:-0.1447},
+      {name:"Green Park", lat:51.5067, lng:-0.1428},
+      {name:"Oxford Circus", lat:51.5152, lng:-0.1415},
+      {name:"Warren Street", lat:51.5244, lng:-0.1384},
+      {name:"Euston", lat:51.5282, lng:-0.1337},
+      {name:"King's Cross St Pancras", lat:51.5308, lng:-0.1238},
+      {name:"Highbury & Islington", lat:51.5461, lng:-0.1038}
+    ]
+  },
+  {
+    name: "Northern", color: "#000000", weight: 5,
+    stations: [
+      {name:"Oval", lat:51.4819, lng:-0.1134},
+      {name:"Kennington", lat:51.4881, lng:-0.1049},
+      {name:"Waterloo", lat:51.5036, lng:-0.1143},
+      {name:"Embankment", lat:51.5073, lng:-0.1224},
+      {name:"Charing Cross", lat:51.5081, lng:-0.1246},
+      {name:"Leicester Square", lat:51.5113, lng:-0.1281},
+      {name:"Tottenham Court Road", lat:51.5165, lng:-0.1306},
+      {name:"Goodge Street", lat:51.5197, lng:-0.1350},
+      {name:"Warren Street", lat:51.5244, lng:-0.1384},
+      {name:"Euston", lat:51.5282, lng:-0.1337},
+      {name:"Mornington Crescent", lat:51.5344, lng:-0.1388},
+      {name:"Camden Town", lat:51.5393, lng:-0.1428}
+    ]
+  },
+  {
+    name: "Northern (Bank branch)", color: "#000000", weight: 5,
+    stations: [
+      {name:"Kennington", lat:51.4881, lng:-0.1049},
+      {name:"Borough", lat:51.5007, lng:-0.0933},
+      {name:"London Bridge", lat:51.5056, lng:-0.0863},
+      {name:"Bank", lat:51.5133, lng:-0.0886},
+      {name:"Moorgate", lat:51.5186, lng:-0.0886},
+      {name:"Old Street", lat:51.5262, lng:-0.0879},
+      {name:"Angel", lat:51.5322, lng:-0.1059},
+      {name:"King's Cross St Pancras", lat:51.5308, lng:-0.1238},
+      {name:"Euston", lat:51.5282, lng:-0.1337}
+    ]
+  },
+  {
+    name: "Circle", color: "#FFD300", weight: 5,
+    stations: [
+      {name:"Paddington", lat:51.5154, lng:-0.1755},
+      {name:"Edgware Road", lat:51.5202, lng:-0.1681},
+      {name:"Baker Street", lat:51.5226, lng:-0.1571},
+      {name:"Great Portland Street", lat:51.5240, lng:-0.1441},
+      {name:"Euston Square", lat:51.5263, lng:-0.1354},
+      {name:"King's Cross St Pancras", lat:51.5308, lng:-0.1238},
+      {name:"Farringdon", lat:51.5203, lng:-0.1053},
+      {name:"Barbican", lat:51.5204, lng:-0.0977},
+      {name:"Moorgate", lat:51.5186, lng:-0.0886},
+      {name:"Liverpool Street", lat:51.5178, lng:-0.0823},
+      {name:"Aldgate", lat:51.5141, lng:-0.0757},
+      {name:"Tower Hill", lat:51.5098, lng:-0.0766},
+      {name:"Monument", lat:51.5104, lng:-0.0863},
+      {name:"Cannon Street", lat:51.5116, lng:-0.0903},
+      {name:"Mansion House", lat:51.5123, lng:-0.0941},
+      {name:"Blackfriars", lat:51.5119, lng:-0.1033},
+      {name:"Temple", lat:51.5113, lng:-0.1139},
+      {name:"Embankment", lat:51.5073, lng:-0.1224},
+      {name:"Westminster", lat:51.5009, lng:-0.1246},
+      {name:"St James's Park", lat:51.4994, lng:-0.1337},
+      {name:"Victoria", lat:51.4965, lng:-0.1447},
+      {name:"Sloane Square", lat:51.4921, lng:-0.1566},
+      {name:"South Kensington", lat:51.4941, lng:-0.1739},
+      {name:"Gloucester Road", lat:51.4944, lng:-0.1827},
+      {name:"Earl's Court", lat:51.4913, lng:-0.1934},
+      {name:"High Street Kensington", lat:51.5008, lng:-0.1920},
+      {name:"Notting Hill Gate", lat:51.5093, lng:-0.1966},
+      {name:"Bayswater", lat:51.5121, lng:-0.1879},
+      {name:"Royal Oak", lat:51.5197, lng:-0.1882},
+      {name:"Paddington", lat:51.5154, lng:-0.1755}
+    ]
+  },
+  {
+    name: "District", color: "#00782A", weight: 5,
+    stations: [
+      {name:"Kensington Olympia", lat:51.4984, lng:-0.2101},
+      {name:"Earl's Court", lat:51.4913, lng:-0.1934},
+      {name:"West Kensington", lat:51.4901, lng:-0.2067},
+      {name:"Barons Court", lat:51.4905, lng:-0.2133},
+      {name:"Hammersmith", lat:51.4934, lng:-0.2251}
+    ]
+  },
+  {
+    name: "District (main)", color: "#00782A", weight: 5,
+    stations: [
+      {name:"Earl's Court", lat:51.4913, lng:-0.1934},
+      {name:"Gloucester Road", lat:51.4944, lng:-0.1827},
+      {name:"South Kensington", lat:51.4941, lng:-0.1739},
+      {name:"Sloane Square", lat:51.4921, lng:-0.1566},
+      {name:"Victoria", lat:51.4965, lng:-0.1447},
+      {name:"St James's Park", lat:51.4994, lng:-0.1337},
+      {name:"Westminster", lat:51.5009, lng:-0.1246},
+      {name:"Embankment", lat:51.5073, lng:-0.1224},
+      {name:"Blackfriars", lat:51.5119, lng:-0.1033},
+      {name:"Mansion House", lat:51.5123, lng:-0.0941},
+      {name:"Cannon Street", lat:51.5116, lng:-0.0903},
+      {name:"Monument", lat:51.5104, lng:-0.0863},
+      {name:"Tower Hill", lat:51.5098, lng:-0.0766}
+    ]
+  },
+  {
+    name: "Elizabeth", color: "#9B0056", weight: 5,
+    stations: [
+      {name:"Paddington", lat:51.5154, lng:-0.1755},
+      {name:"Bond Street", lat:51.5142, lng:-0.1494},
+      {name:"Tottenham Court Road", lat:51.5165, lng:-0.1306},
+      {name:"Farringdon", lat:51.5203, lng:-0.1053},
+      {name:"City Thameslink", lat:51.5139, lng:-0.1044},
+      {name:"Liverpool Street", lat:51.5178, lng:-0.0823}
+    ]
+  },
+  {
+    name: "Metropolitan", color: "#9B0056", weight: 5,
+    stations: [
+      {name:"Finchley Road", lat:51.5474, lng:-0.1800},
+      {name:"Baker Street", lat:51.5226, lng:-0.1571},
+      {name:"Great Portland Street", lat:51.5240, lng:-0.1441},
+      {name:"Euston Square", lat:51.5263, lng:-0.1354},
+      {name:"King's Cross St Pancras", lat:51.5308, lng:-0.1238},
+      {name:"Farringdon", lat:51.5203, lng:-0.1053},
+      {name:"Barbican", lat:51.5204, lng:-0.0977},
+      {name:"Moorgate", lat:51.5186, lng:-0.0886},
+      {name:"Liverpool Street", lat:51.5178, lng:-0.0823},
+      {name:"Aldgate", lat:51.5141, lng:-0.0757}
+    ]
+  }
 ];
-
-const lineColors = {
-  "Central":"#E32017","Jubilee":"#A0A5A9","Bakerloo":"#B36305",
-  "Piccadilly":"#003688","Victoria":"#0098D4","Circle":"#FFD300",
-  "District":"#00782A","Northern":"#333333","Elizabeth":"#6950A1",
-  "Hammersmith":"#F3A9BB","Metropolitan":"#9B0056","Waterloo & City":"#95CDBA"
-};
 
 // ─── HELPERS ─────────────────────────────────────────────────────────
 function hasTerrace(p) { return p.amenities.some(a => a==='terrace'||a==='balcony'); }
@@ -750,14 +895,20 @@ function haversineKm(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-function getNearestTube(p) {
-  var best = null, bestDist = Infinity;
-  tubeStations.forEach(function(s) {
-    var d = haversineKm(p.lat, p.lng, s.lat, s.lng);
-    if (d < bestDist) { bestDist = d; best = s; }
+function getNearestTube(lat, lng) {
+  var nearest = null, minDist = Infinity;
+  var seen = new Set();
+  tubeLines.forEach(function(line) {
+    line.stations.forEach(function(station) {
+      if (seen.has(station.name)) return;
+      seen.add(station.name);
+      var d = haversineKm(lat, lng, station.lat, station.lng);
+      if (d < minDist) { minDist = d; nearest = station; }
+    });
   });
-  var mins = Math.round(bestDist / 0.084);
-  return { station: best, mins: mins };
+  if (!nearest) return '';
+  var mins = Math.round(minDist / 0.084 * 60);
+  return '\uD83D\uDE87 ' + nearest.name + ' \u00B7 ' + mins + ' min';
 }
 
 function getColor(p) {
@@ -842,37 +993,64 @@ function createMarker(p) {
 properties.forEach(createMarker);
 
 // ─── TUBE OVERLAY ────────────────────────────────────────────────────
-var showTubeLayer = false;
-var tubeMarkerObjects = [];
+var tubeVisible = false;
+var tubeLayerGroup = L.layerGroup();
 
-(function buildTubeMarkers() {
-  tubeStations.forEach(function(s) {
-    var color = lineColors[s.lines[0]] || '#888888';
-    var icon = L.divIcon({
-      className: 'custom-marker',
-      html: '<div class="tube-dot" style="background:' + color + ';"></div>',
-      iconSize: [8, 8],
-      iconAnchor: [4, 4],
-      popupAnchor: [0, -6]
-    });
-    var m = L.marker([s.lat, s.lng], { icon: icon, zIndexOffset: -1000 });
-    m.bindTooltip(s.name + ' (' + s.lines.join(', ') + ')', {
-      direction: 'top',
-      className: 'tube-tooltip',
-      sticky: false
-    });
-    tubeMarkerObjects.push(m);
+function renderTubeOverlay() {
+  tubeLayerGroup.clearLayers();
+  if (!tubeVisible) return;
+
+  var stationsSeen = new Set();
+
+  // Draw lines first (behind stations)
+  tubeLines.forEach(function(line) {
+    var coords = line.stations.map(function(s) { return [s.lat, s.lng]; });
+    L.polyline(coords, {
+      color: line.color,
+      weight: line.weight,
+      opacity: 0.85,
+      lineJoin: 'round',
+      lineCap: 'round'
+    }).addTo(tubeLayerGroup);
   });
-})();
+
+  // Draw station circles on top
+  tubeLines.forEach(function(line) {
+    line.stations.forEach(function(station) {
+      var key = station.name;
+      if (!stationsSeen.has(key)) {
+        stationsSeen.add(key);
+        L.circleMarker([station.lat, station.lng], {
+          radius: 5,
+          fillColor: '#FFFFFF',
+          color: '#1A1A2E',
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 1,
+          zIndexOffset: 100
+        })
+        .bindTooltip(station.name, {
+          permanent: false,
+          direction: 'top',
+          className: 'tube-tooltip',
+          offset: [0, -6]
+        })
+        .addTo(tubeLayerGroup);
+      }
+    });
+  });
+}
 
 function toggleTubeLayer() {
-  showTubeLayer = !showTubeLayer;
+  tubeVisible = !tubeVisible;
   var btn = document.getElementById('tubeToggle');
-  if (showTubeLayer) {
-    tubeMarkerObjects.forEach(function(m) { m.addTo(map); });
+  if (tubeVisible) {
+    tubeLayerGroup.addTo(map);
+    renderTubeOverlay();
     btn.classList.add('active');
   } else {
-    tubeMarkerObjects.forEach(function(m) { if (map.hasLayer(m)) map.removeLayer(m); });
+    renderTubeOverlay();
+    map.removeLayer(tubeLayerGroup);
     btn.classList.remove('active');
   }
 }
@@ -1009,8 +1187,8 @@ function renderCard(p) {
   // Nearest tube
   var tubeHtml = '';
   if (!isMonitor && p.lat) {
-    var nt = getNearestTube(p);
-    tubeHtml = '<span>🚇 ' + nt.station.name + ' (' + nt.mins + ' min)</span>';
+    var ntStr = getNearestTube(p.lat, p.lng);
+    if (ntStr) tubeHtml = '<span>' + ntStr + '</span>';
   }
 
   // Specs
