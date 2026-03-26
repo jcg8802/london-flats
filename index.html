@@ -907,7 +907,7 @@ function getNearestTube(lat, lng) {
     });
   });
   if (!nearest) return '';
-  var mins = Math.round(minDist / 0.084 * 60);
+  var mins = Math.round(minDist * 12); // 5km/h = 12 min/km
   return '\uD83D\uDE87 ' + nearest.name + ' \u00B7 ' + mins + ' min';
 }
 
