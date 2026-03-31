@@ -425,6 +425,7 @@ body {
   box-shadow: 0 0 10px rgba(240,136,62,0.5);
   border: 3px solid var(--purple);
 }
+.marker-dot.gold { background: #FFD700; box-shadow: 0 0 10px rgba(255,215,0,0.6); }
 .marker-dot.sauna-pulse {
   animation: pulse 2s ease-in-out infinite;
 }
@@ -653,7 +654,7 @@ const properties = [
   {id:61,name:"Boydell Court (new unit) NW8",lat:51.5313,lng:-0.1683,price:"~£5,918",priceNum:5918,beds:3,baths:3,sqft:"1,150",amenities:["concierge","parking","garden"],agent:"Arlington Residential",url:"https://www.onthemarket.com/details/19100381/",notes:"🆕 9th floor, interior designed. Gated, 24hr porter, off-street parking. Avail 22 Apr.",available:"22 Apr 2026",cat:"active",daysOnMarket:0,photo:""},
   // NEW LISTINGS — 26 Mar 2026
   {id:62,name:"Hyde Park Gate, Kensington SW7",lat:51.5022,lng:-0.1835,price:"£6,500",priceNum:6500,beds:3,baths:2,sqft:"",amenities:["concierge","parking","balcony","furnished"],agent:"Winkworth South Kensington",url:"https://www.rightmove.co.uk/properties/171930113",notes:"💰 REDUCED TODAY. 2nd floor portered block, lift, off-street parking (1st come), 2 Juliet balconies. Near High St Kensington & Kensington Gardens.",available:"Now",cat:"active",daysOnMarket:0,photo:""},
-  {id:63,name:"Malvern Court, Onslow Square SW7",lat:51.4950,lng:-0.1765,price:"£7,000",priceNum:7000,beds:3,baths:2,sqft:"",amenities:["concierge"],agent:"Winchester White South Kensington",url:"https://www.rightmove.co.uk/properties/173708726",notes:"🆕 NEW YESTERDAY. Top floor, far-reaching views. Porter, lift, walk-in wardrobe, utility room. Near South Kensington station.",available:"Now",cat:"active",daysOnMarket:1,photo:""},
+  {id:63,name:"Malvern Court, Onslow Square SW7",lat:51.4950,lng:-0.1765,price:"£7,000",priceNum:7000,beds:3,baths:2,sqft:"",amenities:["concierge"],agent:"Winchester White South Kensington",url:"https://www.rightmove.co.uk/properties/173708726",notes:"🆕 NEW YESTERDAY. Top floor, far-reaching views. Porter, lift, walk-in wardrobe, utility room. Near South Kensington station.",available:"Now",cat:"active",daysOnMarket:1,penthouse:true,photo:""},
   {id:64,name:"Addison Road, Holland Park W14",lat:51.5010,lng:-0.2120,price:"£4,600",priceNum:4600,beds:3,baths:2,sqft:"",amenities:["concierge","parking"],agent:"Hamptons Kensington",url:"https://www.rightmove.co.uk/properties/173723804",notes:"🆕 NEW TODAY. 6th floor with lift, porter. Communal heating/hot water included in rent. Permit parking. Furnished or unfurnished.",available:"2 Jun 2026",cat:"active",daysOnMarket:0,photo:""},
   // NEW LISTINGS — 28 Mar 2026
   {id:65,name:"Dorset Street, Marylebone W1U",lat:51.5215,lng:-0.1540,price:"£5,750",priceNum:5750,beds:3,baths:2,sqft:"1,011",amenities:["furnished"],agent:"Manors - Baker Street",url:"https://www.rightmove.co.uk/properties/173817461",notes:"🆕 NEW YESTERDAY. Period conversion, heart of Marylebone Village. S-facing reception, 3 double beds, 2 shower rooms, utility area, ample storage. Available 10 Apr.",available:"10 Apr 2026",cat:"active",daysOnMarket:1,photo:""},
@@ -662,7 +663,7 @@ const properties = [
   {id:68,name:"North Gate, St John's Wood NW8",lat:51.5308,lng:-0.1690,price:"~£6,200",priceNum:6200,beds:3,baths:2,sqft:"",amenities:["concierge","furnished"],agent:"Chestertons - St Johns Wood",url:"https://www.onthemarket.com/details/19126551/",notes:"🆕 NEW YESTERDAY. Period building opposite Regent's Park. 3rd floor, lift, communal gardens, 24hr porterage. Available now.",available:"Now",cat:"active",daysOnMarket:1,photo:""},
   // NEW LISTINGS — 29 Mar 2026
   {id:69,name:"Dudley Court, Upper St Martin's Lane WC2H",lat:51.5125,lng:-0.1230,price:"£4,750",priceNum:4750,beds:3,baths:1,sqft:"",amenities:["furnished","parking","garden","gym"],agent:"OpenRent",url:"https://www.rightmove.co.uk/properties/171984836",notes:"💰 REDUCED (29 Mar). Bright 3-bed in Holborn. Communal garden, 2 balconies. 3 min walk Covent Garden tube. Gym nearby with outdoor heated pool. Available now.",available:"Now",cat:"active",daysOnMarket:1,photo:""},
-  {id:70,name:"Old Brompton Road Penthouse, SW3",lat:51.4908,lng:-0.1820,price:"£8,333",priceNum:8333,beds:3,baths:2,sqft:"",amenities:["furnished","parking"],agent:"OpenRent",url:"https://www.onthemarket.com/details/19130529/",notes:"🆕 NEW (28 Mar). Chelsea/South Kensington penthouse. EPC B. Parking. Pets considered. Min 1 month tenancy. Available now.",available:"Now",cat:"active",daysOnMarket:2,photo:""},
+  {id:70,name:"Old Brompton Road Penthouse, SW3",lat:51.4908,lng:-0.1820,price:"£8,333",priceNum:8333,beds:3,baths:2,sqft:"",amenities:["furnished","parking"],agent:"OpenRent",url:"https://www.onthemarket.com/details/19130529/",notes:"🆕 NEW (28 Mar). Chelsea/South Kensington penthouse. EPC B. Parking. Pets considered. Min 1 month tenancy. Available now.",available:"Now",cat:"active",daysOnMarket:2,penthouse:true,photo:""},
   {id:71,name:"Montrose Court, Princes Gate SW7",lat:51.5014,lng:-0.1720,price:"~£6,000",priceNum:6000,beds:3,baths:2,sqft:"1,200",amenities:["concierge","furnished"],agent:"Harding Green",url:"https://www.rightmove.co.uk/properties/173787572",notes:"🆕 NEW (27 Mar). Ground floor portered building directly opposite Hyde Park. 24hr porterage, lift. ~1,200 sqft. Ref: 743547.",available:"Now",cat:"active",daysOnMarket:3,photo:""},
   {id:72,name:"Lower Sloane Street, SW1W",lat:51.4912,lng:-0.1590,price:"£6,933",priceNum:6933,beds:3,baths:2,sqft:"",amenities:[],agent:"Marsh & Parsons, Chelsea",url:"https://www.rightmove.co.uk/properties/173778272",notes:"🆕 NEW (27 Mar). Belgravia/Chelsea border. Recently added.",available:"Now",cat:"active",daysOnMarket:3,photo:""},
   // NEW LISTINGS — 30 Mar 2026
@@ -679,7 +680,11 @@ const properties = [
   {id:83,name:"Craven Hill, Bayswater W2",lat:51.5145,lng:-0.1857,price:"~£4,572",priceNum:4572,beds:3,baths:2,sqft:"1,172",amenities:["garden"],agent:"Century 21 - Westminster",url:"https://www.onthemarket.com/details/16660005/",notes:"🆕 NEW YESTERDAY. Elegant 3-bed on 1st floor with high ceilings. En-suite to master, separate modern kitchen, fitted wardrobes. Near Paddington & Lancaster Gate. Unfurnished. Avail now.",available:"Now",cat:"active",daysOnMarket:1,photo:""},
   {id:84,name:"Merchant Square, Paddington Basin W2",lat:51.5193,lng:-0.1736,price:"~£6,600–£7,200",priceNum:6600,beds:3,baths:2,sqft:"",amenities:["concierge","parking"],agent:"Greenstone Residential",url:"https://www.rightmove.co.uk/properties/173899469",notes:"🆕 NEW YESTERDAY. 10th floor, stunning views over London Skyline and Grand Union Canal. Open-plan kitchen, 3 beds, 2 baths. Concierge, lift, secure underground parking included. Near Paddington (Elizabeth Line).",available:"Now",cat:"active",daysOnMarket:1,photo:""},
   {id:85,name:"St Johns Wood Park, NW8",lat:51.5398,lng:-0.1748,price:"~£5,010",priceNum:5010,beds:3,baths:3,sqft:"1,000",amenities:["concierge"],agent:"Newington London Estates",url:"https://www.onthemarket.com/details/19148082/",notes:"🆕 NEW TODAY. Beautifully refurbished 3-bed on 4th floor. Wood flooring, high ceilings, spacious open-plan living. 24hr porter, lift. Near Swiss Cottage & Finchley Road. Furnished or unfurnished.",available:"Now",cat:"active",daysOnMarket:0,photo:""},
-  {id:86,name:"Portman Square, Marylebone W1H",lat:51.5168,lng:-0.1539,price:"~£5,500",priceNum:5500,beds:3,baths:3,sqft:"1,124",amenities:["concierge","aircon"],agent:"Scraye",url:"https://www.onthemarket.com/details/19144656/",notes:"🆕 NEW TODAY. Magnificent refurbished flat on 7th floor with lift. 3 bed, 3 bath, 1,124 sqft. A/C, concierge/24hr security, communal garden, fully integrated kitchen. Steps from Marble Arch & Bond Street tube.",available:"Now",cat:"active",daysOnMarket:0,photo:""}
+  {id:86,name:"Portman Square, Marylebone W1H",lat:51.5168,lng:-0.1539,price:"~£5,500",priceNum:5500,beds:3,baths:3,sqft:"1,124",amenities:["concierge","aircon"],agent:"Scraye",url:"https://www.onthemarket.com/details/19144656/",notes:"🆕 NEW TODAY. Magnificent refurbished flat on 7th floor with lift. 3 bed, 3 bath, 1,124 sqft. A/C, concierge/24hr security, communal garden, fully integrated kitchen. Steps from Marble Arch & Bond Street tube.",available:"Now",cat:"active",daysOnMarket:0,photo:""},
+  // PENTHOUSE PLACEHOLDERS — EXPLORE
+  {id:87,name:"Penthouse, One Hyde Park SW1X",lat:51.5013,lng:-0.1601,price:"£10,000",priceNum:10000,beds:3,baths:3,sqft:"2,200",amenities:["sauna","pool","spa","concierge","gym","parking","terrace"],penthouse:true,explore:true,agent:"Savills",url:"https://www.rightmove.co.uk/property-to-rent/Knightsbridge/penthouses.html",notes:"Penthouse. Wraparound terrace. Hyde Park views. Pool, spa, cinema, 24hr concierge.",available:"Now",cat:"active",daysOnMarket:4},
+  {id:88,name:"Penthouse, Marylebone W1U",lat:51.5215,lng:-0.1530,price:"£8,500",priceNum:8500,beds:3,baths:2,sqft:"1,800",amenities:["concierge","terrace","gym","parking"],penthouse:true,explore:true,agent:"Knight Frank",url:"https://www.rightmove.co.uk/property-to-rent/Marylebone/penthouses.html",notes:"Penthouse with private roof terrace. 360° views. Top floor of new build. Marylebone Village.",available:"Now",cat:"active",daysOnMarket:6},
+  {id:89,name:"Penthouse, Notting Hill W11",lat:51.5135,lng:-0.1960,price:"£7,500",priceNum:7500,beds:3,baths:2,sqft:"1,600",amenities:["terrace","parking","garden"],penthouse:true,explore:true,agent:"Strutt & Parker",url:"https://www.rightmove.co.uk/property-to-rent/Notting-Hill/penthouses.html",notes:"Penthouse. Private terrace with garden views. Top floor Victorian conversion. Notting Hill Gate 3 min walk.",available:"Now",cat:"active",daysOnMarket:9}
 ];
 
 // ─── TUBE LINES ───────────────────────────────────────────────────────
@@ -980,7 +985,8 @@ L.polygon(hydeParkCoords, {
 const markers = {};
 
 function createMarker(p) {
-  const color = getColor(p);
+  let color = getColor(p);
+  if (p.penthouse) color = 'gold';
   const isSauna = p.cat === 'sauna' || (hasSauna(p) && p.cat !== 'monitor');
   const cssClass = `marker-dot ${color}${isSauna ? ' sauna-pulse' : ''}`;
   const size = p.cat === 'monitor' ? 12 : 16;
@@ -1092,6 +1098,7 @@ const filters = [
   { key:'ac', label:'🏙️ A/C Required', fn: hasAC },
   { key:'big', label:'📐 1,000+ sqft', fn: isBigOrUnknown },
   { key:'4bed', label:'🛏️ 4 Bed', fn: is4Bed },
+  { key:'penthouse', label:'🏙️ Penthouse', fn: p => p.penthouse === true },
   { key:'monitor', label:'📡 Monitored', fn: p => p.cat==='monitor' }
 ];
 
