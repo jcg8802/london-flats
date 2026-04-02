@@ -532,6 +532,27 @@ body {
 .tube-toggle:hover { border-color: var(--accent); color: var(--text-primary); }
 .tube-toggle.active { background: #E32017; border-color: #E32017; color: white; }
 
+/* FAVOURITES */
+.fav-btn {
+  position: absolute; top: 8px; left: 8px;
+  background: rgba(13,17,23,0.7); border: none; border-radius: 50%;
+  width: 32px; height: 32px; cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 3; transition: transform 0.15s, background 0.15s;
+  backdrop-filter: blur(4px);
+}
+.fav-btn:hover { transform: scale(1.15); background: rgba(30,30,50,0.9); }
+.fav-btn.active { background: rgba(220,50,80,0.25); }
+.fav-filter-btn {
+  background: var(--bg-card); border: 1px solid var(--border);
+  color: var(--text-secondary); padding: 5px 10px; border-radius: 6px;
+  font-size: 12px; font-family: inherit; cursor: pointer;
+  transition: all 0.2s; white-space: nowrap;
+}
+.fav-filter-btn:hover { border-color: #e33; color: var(--text-primary); }
+.fav-filter-btn.active { background: rgba(220,50,80,0.15); border-color: rgba(220,50,80,0.6); color: #ff6b6b; }
+.marker-dot.fav-ring { box-shadow: 0 0 0 3px rgba(220,50,80,0.9), 0 0 14px rgba(220,50,80,0.5) !important; }
+
 /* TUBE MARKERS */
 .tube-tooltip {
   background: rgba(20, 20, 40, 0.9);
@@ -571,6 +592,7 @@ body {
     <div class="legend-item"><span class="legend-dot red"></span> Monitored</div>
   </div>
   <button class="tube-toggle" id="tubeToggle" onclick="toggleTubeLayer()">🚇 Tube</button>
+  <button class="fav-filter-btn" id="favFilterBtn" onclick="setFavFilter()">❤️ Saved <span id="favCount" style="display:none; background:rgba(220,50,80,0.8); color:white; border-radius:10px; padding:1px 6px; font-size:11px; margin-left:2px;"></span></button>
   <select class="sort-select" id="sortSelect">
     <option value="price-asc">Price: Low → High</option>
     <option value="price-desc">Price: High → Low</option>
@@ -917,6 +939,55 @@ const tubeLines = [
 
 // ─── HELPERS ─────────────────────────────────────────────────────────
 function hasTerrace(p) { return p.amenities.some(a => a==='terrace'||a==='balcony'); }
+// ─── FAVOURITES ──────────────────────────────────────────────────────
+var favourites = new Set(JSON.parse(localStorage.getItem('londonFlats_favs') || '[]'));
+
+function saveFavs() {
+  localStorage.setItem('londonFlats_favs', JSON.stringify([...favourites]));
+}
+
+function toggleFav(event, id) {
+  event.stopPropagation();
+  if (favourites.has(id)) { favourites.delete(id); } else { favourites.add(id); }
+  saveFavs();
+  var btn = document.querySelector('[data-fav-id="' + id + '"]');
+  if (btn) {
+    btn.querySelector('.fav-icon').textContent = favourites.has(id) ? '❤️' : '🤍';
+    btn.classList.toggle('active', favourites.has(id));
+  }
+  // Update pin ring
+  if (markers[id] && markers[id].getElement) {
+    var el = markers[id].getElement();
+    if (el) {
+      var dot = el.querySelector('.marker-dot');
+      if (dot) dot.classList.toggle('fav-ring', favourites.has(id));
+    }
+  }
+  updateFavCount();
+  if (currentFilter === 'favs') render();
+}
+
+function updateFavCount() {
+  var badge = document.getElementById('favCount');
+  if (badge) {
+    badge.textContent = favourites.size;
+    badge.style.display = favourites.size > 0 ? 'inline' : 'none';
+  }
+}
+
+function setFavFilter() {
+  if (currentFilter === 'favs') {
+    currentFilter = 'all';
+    document.getElementById('favFilterBtn').classList.remove('active');
+    activeFilters = new Set(['all']);
+  } else {
+    currentFilter = 'favs';
+    activeFilters = new Set(['favs']);
+    document.getElementById('favFilterBtn').classList.add('active');
+  }
+  render();
+}
+
 function hasSauna(p) { return p.amenities.some(a => a==='sauna'||a==='steam'); }
 function hasPool(p) { return p.amenities.includes('pool'); }
 function hasParking(p) { return p.amenities.includes('parking'); }
@@ -1004,7 +1075,8 @@ function createMarker(p) {
   let color = getColor(p);
   if (p.penthouse) color = 'gold';
   const isSauna = p.cat === 'sauna' || (hasSauna(p) && p.cat !== 'monitor');
-  const cssClass = `marker-dot ${color}${isSauna ? ' sauna-pulse' : ''}`;
+  const isFav = favourites.has(p.id);
+  const cssClass = `marker-dot ${color}${isSauna ? ' sauna-pulse' : ''}${isFav ? ' fav-ring' : ''}`;
   const size = p.cat === 'monitor' ? 12 : 16;
 
   const icon = L.divIcon({
@@ -1105,6 +1177,7 @@ function toggleTubeLayer() {
 // ─── FILTERS ─────────────────────────────────────────────────────────
 const filters = [
   { key:'all', label:'All', fn: ()=>true },
+  { key:'favs', label:'❤️ Saved', fn: p => favourites.has(p.id) },
   { key:'sauna', label:'🧖 Sauna/Steam', fn: hasSauna },
   { key:'pool', label:'🏊 Pool', fn: hasPool },
   { key:'terrace', label:'🌿 Terrace/Balcony', fn: hasTerrace },
@@ -1119,6 +1192,7 @@ const filters = [
 ];
 
 let activeFilters = new Set(['all']);
+let currentFilter = 'all';
 let activeCardId = null;
 
 function toggleDropdown() {
@@ -1168,14 +1242,20 @@ function buildFilterBar() {
 }
 
 function toggleFilter(key) {
+  // Clear favs mode when using regular filters
+  currentFilter = key === 'all' ? 'all' : key;
+  var favBtn = document.getElementById('favFilterBtn');
+  if (favBtn) favBtn.classList.remove('active');
+
   if (key === 'all') {
     activeFilters.clear();
     activeFilters.add('all');
   } else {
     activeFilters.delete('all');
+    activeFilters.delete('favs');
     if (activeFilters.has(key)) {
       activeFilters.delete(key);
-      if (activeFilters.size === 0) activeFilters.add('all');
+      if (activeFilters.size === 0) { activeFilters.add('all'); currentFilter = 'all'; }
     } else {
       activeFilters.add(key);
     }
@@ -1282,8 +1362,10 @@ function renderCard(p) {
     ? '<img src="' + p.photo + '" alt="' + p.name.replace(/"/g, '&quot;') + '" loading="lazy" onerror="this.parentElement.innerHTML=\'<div class=card-gradient></div>\'"><div class="img-overlay"></div>'
     : '<div class="card-gradient"></div>';
 
+  var favBtn = '<button class="fav-btn ' + (favourites.has(p.id) ? 'active' : '') + '" data-fav-id="' + p.id + '" onclick="toggleFav(event,' + p.id + ')" title="Save property"><span class="fav-icon">' + (favourites.has(p.id) ? '❤️' : '🤍') + '</span></button>';
+
   return '<div class="card ' + catClass + ' ' + terraceClass + ' ' + activeClass + '" id="card-' + p.id + '" onclick="selectProperty(' + p.id + ')">' +
-    '<div class="card-image">' + imgHtml + badge + alertHtml + '</div>' +
+    '<div class="card-image">' + imgHtml + badge + alertHtml + favBtn + '</div>' +
     '<div class="card-body">' +
     '<div class="card-price' + (isMonitor ? ' monitor-price' : '') + '">' + p.price + '</div>' +
     '<div class="card-address">' + p.name + '</div>' +
@@ -1312,7 +1394,11 @@ function render() {
   });
 
   if (filtered.length === 0) {
-    sidebar.innerHTML = '<div class="no-results"><h3>No properties match</h3><p>Try adjusting your filters</p></div>';
+    if (currentFilter === 'favs') {
+      sidebar.innerHTML = '<div class="no-results"><h3>No saved properties yet</h3><p>Tap the ❤️ on any property card to save it here.</p></div>';
+    } else {
+      sidebar.innerHTML = '<div class="no-results"><h3>No properties match</h3><p>Try adjusting your filters</p></div>';
+    }
     return;
   }
 
@@ -1349,6 +1435,7 @@ function highlightCard(id) {
 
 // ─── INIT ────────────────────────────────────────────────────────────
 render();
+updateFavCount();
 </script>
 </body>
 </html>
